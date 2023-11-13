@@ -7,6 +7,10 @@ project(
 
 find_package(OpenMP)
 
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
@@ -25,7 +29,4 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(hw1_tests tests/test_multiplication.cpp)
-target_link_libraries(hw1_tests gtest_main)
-include(GoogleTest)
-gtest_discover_tests(hw1_tests)
+add_executable(grrt_server src/grrt_server.cpp)
