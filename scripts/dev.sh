@@ -1,6 +1,7 @@
 docker build . -t grrt_container
 xhost local:root & 
 docker run -it --rm \
+ --gpus all \
  --runtime=nvidia \
  -e DISPLAY=$DISPLAY \
  -v $XSOCK:$XSOCK \

@@ -1,0 +1,41 @@
+
+robots:
+  - name: drone_1
+    type: drone
+    roadmap: drone_1_roadmap
+  - name: drone_2
+    type: drone
+    roadmap: drone_2_roadmap
+
+roadmaps:
+  - name: drone_1_roadmap
+    robot_type: drone
+    states:
+      - name: state_1
+        x: -1
+        y: -1
+        z: 0
+      - name: state_2
+        x: 1
+        y: -1
+        z: 0
+  - name: drone_2_roadmap
+    robot_type: drone
+    states:
+      - name: state_1
+        x: -1
+        y: 1
+        z: 0
+      - name: state_2
+        x: 1
+        y: 1
+        z: 0
+
+problems:
+  - name: Trivial Problem
+    start:
+      - drone_1: state_1
+      - drone_2: state_1
+    end:
+      - drone_1: state_2
+      - drone_2: state_2

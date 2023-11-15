@@ -1,0 +1,17 @@
+
+robots:
+  - name: drone_1
+    type: drone
+  - name: drone_2
+    type: drone
+
+problems:
+  - name: Problem 1
+    start:
+      - drone_1:
+          x: 0
+          y: 0
+          z: 0
+    
+    
+

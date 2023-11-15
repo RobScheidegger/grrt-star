@@ -1,27 +1,32 @@
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
 
 namespace grrt {
+    /// @brief Type definition for a an Id for a roadmap state.
+    typedef uint64_t RoadmapStateId;
 
     /// @brief Generic base class representing a particular robot's state.
     class RobotState {
        public:
+        typedef std::shared_ptr<RobotState> SharedPtr;
+        /// @brief Get the distance between this robot state and another robot state.
         /// @brief Get a string representation of the robot state.
         /// @return A string representation of the robot state.
         virtual std::string toString() const = 0;
 
         /// @brief Construct a new Robot State object
-        void setId(const uint64_t id) { m_id = id; }
+        void setId(const RoadmapStateId id) { m_id = id; }
 
         /// @brief Gets the unique Id for this robot state (in the roadmap graph).
         /// @return The unique Id for this robot state (in the roadmap graph).
-        uint64_t getId() const { return m_id; }
+        RoadmapStateId getId() const { return m_id; }
 
        private:
-        uint64_t m_id = -1;
+        RoadmapStateId m_id = -1;
     };
 
     /// @brief Concept for a Robot State.
