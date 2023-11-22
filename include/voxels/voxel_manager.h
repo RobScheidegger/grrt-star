@@ -6,6 +6,8 @@ namespace grrt {
 
     class VoxelManager {
        public:
+        typedef std::shared_ptr<VoxelManager> SharedPtr;
+
         /// @brief Determines whether two voxels intersect or not.
         /// @param voxel_1 The first voxel.
         /// @param voxel_2 The second voxel.

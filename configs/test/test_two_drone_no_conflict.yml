@@ -1,3 +1,4 @@
+voxels: PCL
 
 robots:
   - name: drone_1

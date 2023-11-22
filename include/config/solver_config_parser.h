@@ -2,6 +2,6 @@
 
 namespace grrt {
     class SolverConfigParser {
-        static void parse(const std::string& filePath);
+        static SolverConfig::SharedPtr parse(const std::string& filePath);
     };
 }  // namespace grrt
