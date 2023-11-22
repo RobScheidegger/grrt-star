@@ -2,7 +2,8 @@
 #include "pkgs/cli11.hpp"
 #include "spdlog/spdlog.h"
 
-#include "robots/drone/drone.h"
+#include "config/solver_config.h"
+#include "config/solver_config_parser.h"
 
 using namespace grrt;
 

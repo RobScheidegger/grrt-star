@@ -26,8 +26,5 @@ namespace grrt {
 
        private:
         const std::string m_name;
-
-        std::vector<RoadmapVertex::SharedPtr> vertices;
-        std::vector<RoadmapDart::SharedPtr> darts;
     };
 }  // namespace grrt

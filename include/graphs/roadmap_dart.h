@@ -27,7 +27,9 @@ namespace grrt {
 
         /// @brief Get a string representation of the robot state.
         /// @return A string representation of the robot state.
-        std::string toString() const {}
+        std::string toString() const {
+            return m_start->getState()->toString() + " -> " + m_end->getState()->toString();
+        }
 
         void setVoxel(const Voxel::SharedPtr& voxel) { m_voxel = voxel; }
 

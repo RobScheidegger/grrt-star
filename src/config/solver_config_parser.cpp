@@ -1,3 +1,6 @@
+#define RYML_SINGLE_HDR_DEFINE_NOW
+#include "pkgs/rapidyaml.hpp"
+
 #include "config/solver_config_parser.h"
 
 #include <fstream>
@@ -6,9 +9,9 @@
 
 #include "config/solver_config.h"
 #include "graphs/roadmap.h"
-#include "pkgs/rapidyaml.hpp"
+
 #include "result.h"
-#include "robot_types.h"
+#include "robots/robot_types.h"
 
 using namespace grrt;
 
