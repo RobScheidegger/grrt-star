@@ -10,7 +10,7 @@ robots:
 
 roadmaps:
   - name: drone_1_roadmap
-    robot_type: drone
+    type: drone
     states:
       - name: state_1
         to: [state_2]
@@ -23,7 +23,7 @@ roadmaps:
         y: -1
         z: 0
   - name: drone_2_roadmap
-    robot_type: drone
+    type: drone
     states:
       - name: state_1
         x: -1

@@ -17,6 +17,7 @@ namespace grrt {
     };
 
     class Drone : public IRobot {
+       public:
         Drone(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap)
             : IRobot(id, name, roadmap) {}
 

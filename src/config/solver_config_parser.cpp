@@ -1,5 +1,6 @@
 #define RYML_SINGLE_HDR_DEFINE_NOW
 #include "pkgs/rapidyaml.hpp"
+#include "spdlog/spdlog.h"
 
 #include <cassert>
 #include <fstream>
@@ -12,9 +13,19 @@
 #include "graphs/roadmap.h"
 
 #include "result.h"
+#include "robots/drone/drone.hpp"
 #include "robots/robot_types.h"
 
 using namespace grrt;
+
+static grrt::Result parseRobotType(const std::string& robotTypeStr, RobotType& robotType) {
+
+    if (robotTypeStr == "drone") {
+        robotType = RobotType::DRONE;
+        return Result::Ok();
+    }
+    return Result::Error("Unknown robot type: " + robotTypeStr);
+}
 
 static Result getString(const ryml::ConstNodeRef& node, const std::string& key, std::string& value) {
     auto key_substr = c4::to_csubstr(key);
@@ -57,27 +68,15 @@ static Result parseDroneState(const ryml::ConstNodeRef& node, RobotState::Shared
         return res;
     }
 
+    config = std::make_shared<DroneState>(Point(x, y, z), 0.5f);
+
     return Result::Ok();
 }
 
-static Result parseRobotState(const ryml::ConstNodeRef& node, RobotState::SharedPtr& state) {
-    std::string type_string;
-    Result res = getString(node, "type", type_string);
-    if (res.isError) {
-        return res;
-    }
-
-    RobotType type;
-    res = parseRobotType(type_string, type);
-    if (res.isError) {
-        return res;
-    }
-
-    switch (type) {
+static Result parseRobotState(const ryml::ConstNodeRef& node, const RobotType robotType, RobotState::SharedPtr& state) {
+    switch (robotType) {
         case RobotType::DRONE:
             return parseDroneState(node, state);
-        default:
-            return Result::Error("Unknown robot type: " + type_string);
     }
 
     return Result::Ok();
@@ -102,6 +101,7 @@ Result parseRoadmaps(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
         std::string type;
         res = getString(roadmap, "type", type);
         if (res.isError) {
+            spdlog::error("Couldn't find type for roadmap: {}", name);
             return res;
         }
 
@@ -137,14 +137,15 @@ Result parseRoadmaps(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
             }
 
             RobotState::SharedPtr robotState = nullptr;
-            res = parseRobotState(state, robotState);
+            res = parseRobotState(state, robotType, robotState);
             if (res.isError) {
                 return res;
             }
 
             assert(robotState != nullptr);
 
-            roadmap_ptr->addVertex(robotState);
+            auto vertex = roadmap_ptr->addVertex(robotState);
+            state_name_to_vertex[state_name] = vertex;
         }
 
         // Second pass - Adding edges
@@ -184,6 +185,8 @@ Result parseRoadmaps(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
                 }
             }
         }
+
+        config->roadmaps[name] = roadmap_ptr;
     }
 
     return Result::Ok();
@@ -219,7 +222,9 @@ SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName) {
     auto roadmaps = root["roadmaps"];
     Result result = parseRoadmaps(roadmaps, config);
     if (result.isError) {
-        std::cerr << result.msg << std::endl;
+        spdlog::error("Error parsing roadmap: {}", result.msg);
         return nullptr;
     }
+
+    return config;
 }

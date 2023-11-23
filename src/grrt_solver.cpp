@@ -30,5 +30,13 @@ int main(int argc, char** argv) {
     spdlog::info("Loading configuration file: {}", options.configuration_file);
     SolverConfig::SharedPtr config = SolverConfigParser::parse(options.configuration_file);
 
+    if (config == nullptr) {
+        spdlog::error("Failed to parse configuration file");
+        return 1;
+    }
+
+    spdlog::info("Configuration file loaded with {} roadmaps, {} robots, and {} problems", config->roadmaps.size(),
+                 config->robots.size(), config->problems.size());
+
     return 0;
 }
