@@ -14,6 +14,8 @@ namespace grrt {
        public:
         typedef std::shared_ptr<SystemState> SharedPtr;
 
+        SystemState(const uint64_t numRobots) : roadmapStates(numRobots) {}
+
         SystemState(const std::vector<RoadmapStateId>& roadmapStates) : roadmapStates(roadmapStates) {}
 
         std::vector<RoadmapStateId> roadmapStates;

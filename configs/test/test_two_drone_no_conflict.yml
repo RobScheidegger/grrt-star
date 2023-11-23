@@ -1,4 +1,5 @@
-voxels: PCL
+voxels: 
+  type: PCL
 
 robots:
   - name: drone_1
@@ -37,8 +38,8 @@ roadmaps:
 problems:
   - name: Trivial Problem
     start:
-      - drone_1: state_1
-      - drone_2: state_1
-    end:
-      - drone_1: state_2
-      - drone_2: state_2
+      drone_1: state_1
+      drone_2: state_1
+    goal:
+      drone_1: state_2
+      drone_2: state_2

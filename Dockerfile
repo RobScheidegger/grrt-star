@@ -21,9 +21,10 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     apt-get autoremove -y && \
     apt-get clean
 
-# Install Build dependencies
+# Install Build/Debug dependencies
 RUN apt install libspdlog-dev -y
 RUN apt install libeigen3-dev -y
+RUN apt install gdb -y
 
 # RVIZ2 Forwarding
 ENV NVIDIA_VISIBLE_DEVICES \

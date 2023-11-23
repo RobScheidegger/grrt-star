@@ -1,3 +1,4 @@
+#include <cassert>
 #include <functional>
 #include <unordered_map>
 
@@ -11,6 +12,8 @@ typedef std::pair<VoxelType, RobotType> RobotTypeIdentifier;
 
 IRobot::SharedPtr RobotFactory::makeRobot(const RobotId id, const std::string& name,
                                           const Roadmap::SharedPtr& roadmap) const {
+    assert(this != nullptr);
+    assert(roadmap != nullptr);
     switch (m_voxelType) {
         case VoxelType::POINT_CLOUD:
             switch (roadmap->robotType) {
