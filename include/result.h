@@ -4,8 +4,8 @@
 
 namespace grrt {
     struct Result {
-        const std::string msg;
-        const bool isError;
+        std::string msg;
+        bool isError;
         Result(bool isError, const std::string& msg) : msg(msg), isError(isError) {}
 
         static Result Ok(const std::string& msg) { return Result(false, msg); }

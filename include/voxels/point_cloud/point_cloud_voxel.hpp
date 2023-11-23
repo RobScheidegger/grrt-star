@@ -4,6 +4,7 @@
 
 #include "point.h"
 #include "voxels/voxel.h"
+#include "voxels/voxel_manager.h"
 
 #define PCL_VOXEL_RADIUS 0.1
 
@@ -27,5 +28,20 @@ namespace grrt {
         const float m_radius = PCL_VOXEL_RADIUS;
 
         std::vector<Point> m_points;
+    };
+
+    class PointCloudVoxelManager : public VoxelManager {
+       public:
+        typedef std::shared_ptr<PointCloudVoxelManager> SharedPtr;
+
+        bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2) override {
+            // TODO
+            return false;
+        }
+
+        Voxel::SharedPtr optimize(Voxel::SharedPtr& voxel) override {
+            // TODO
+            return nullptr;
+        }
     };
 }  // namespace grrt

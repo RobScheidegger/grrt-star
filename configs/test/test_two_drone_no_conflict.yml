@@ -13,10 +13,12 @@ roadmaps:
     robot_type: drone
     states:
       - name: state_1
+        to: [state_2]
         x: -1
         y: -1
         z: 0
       - name: state_2
+        to: []
         x: 1
         y: -1
         z: 0

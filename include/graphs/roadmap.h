@@ -6,6 +6,7 @@
 
 #include "graphs/roadmap_dart.h"
 #include "graphs/roadmap_vertex.h"
+#include "robots/robot_types.h"
 #include "state/robot_state.h"
 #include "voxels/voxel.h"
 
@@ -15,16 +16,15 @@ namespace grrt {
        public:
         typedef std::shared_ptr<Roadmap> SharedPtr;
 
-        Roadmap(const std::string name) : m_name(name) {}
+        Roadmap(const std::string& name, const RobotType type) : robotType(type), name(name) {}
 
         RoadmapVertex::SharedPtr addVertex(const RobotState::SharedPtr& state);
-        RoadmapDart::SharedPtr addDart(const RobotState::SharedPtr& state1, const RobotState::SharedPtr& state2,
-                                       EdgeParameters& parameters);
+        RoadmapDart::SharedPtr addDart(const RoadmapVertex::SharedPtr& state1, const RoadmapVertex::SharedPtr& state2,
+                                       const EdgeParameters& parameters);
 
         std::vector<RoadmapVertex::SharedPtr> vertices;
         std::vector<RoadmapDart::SharedPtr> darts;
-
-       private:
-        const std::string m_name;
+        RobotType robotType;
+        std::string name;
     };
 }  // namespace grrt

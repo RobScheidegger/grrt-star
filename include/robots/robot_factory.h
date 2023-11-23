@@ -15,11 +15,11 @@ namespace grrt {
 
         RobotFactory(const VoxelType voxelType) : m_voxelType(voxelType) {}
 
-        IRobot::SharedPtr makeRobot(const std::string& name, const Roadmap::SharedPtr& roadmap);
+        IRobot::SharedPtr makeRobot(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap) const;
 
-        VoxelManager::SharedPtr makeVoxelManager();
+        VoxelManager::SharedPtr makeVoxelManager() const;
 
-        Roadmap::SharedPtr makeRoadmap(const RobotType type);
+        Roadmap::SharedPtr makeRoadmap(const std::string& name, const RobotType type) const;
 
        private:
         VoxelType m_voxelType;

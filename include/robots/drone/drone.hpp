@@ -17,6 +17,9 @@ namespace grrt {
     };
 
     class Drone : public IRobot {
+        Drone(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap)
+            : IRobot(id, name, roadmap) {}
+
         PointCloudVoxel::SharedPtr getSweptVoxel(const RoadmapDart::SharedPtr& dart) override {
             return std::make_shared<PointCloudVoxel>();
         }

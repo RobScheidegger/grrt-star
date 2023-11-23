@@ -36,6 +36,10 @@ include_directories(include)
 
 add_executable(grrt_solver 
   src/config/solver_config_parser.cpp
+
+  src/robots/robot_factory.cpp
+  src/robots/robot_types.cpp
+
   src/grrt_solver.cpp)
 
 target_link_libraries(grrt_solver PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)

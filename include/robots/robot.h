@@ -10,14 +10,14 @@ namespace grrt {
     /// @brief A unique ID for a robot.
     typedef uint64_t RobotId;
 
-    /// @brief Generic robot interface to represent a
+    /// @brief Generic robot interface to represent a single robot in a scene.
     class IRobot {
        public:
         typedef std::shared_ptr<IRobot> SharedPtr;
 
-        const std::string name;
-        const RobotId id;
-        const Roadmap::SharedPtr roadmap;
+        std::string name;
+        RobotId id;
+        Roadmap::SharedPtr roadmap;
 
         IRobot(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap)
             : name(name), id(id), roadmap(roadmap) {}
