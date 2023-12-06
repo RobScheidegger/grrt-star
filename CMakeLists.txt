@@ -7,8 +7,22 @@ project(
 
 find_package(OpenMP)
 find_package(MPI REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rmw REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(rmw_fastrtps_cpp QUIET)
 
-include_directories(SYSTEM ${MPI_INCLUDE_PATH} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+include_directories(SYSTEM 
+  ${MPI_INCLUDE_PATH} 
+  ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} 
+  ${rclcpp_INCLUDE_DIRS}
+  ${rmw_INCLUDE_DIRS}
+  ${std_msgs_INCLUDE_DIRS}
+  /opt/ros/humble/include/rosidl_typesupport_interface
+  /opt/ros/humble/include/rcl_interfaces
+)
 
 # Required for THREADS
 set(CMAKE_THREAD_LIBS_INIT "-lpthread")
@@ -34,6 +48,10 @@ endif()
 
 # Link each target with other targets or add options, etc.
 include_directories(include)
+
+link_directories(
+    /opt/ros/humble/lib/
+)
 
 # Add a library for all of the headers and non-executable cpp files
 add_library(grrt
@@ -62,7 +80,15 @@ target_link_libraries(grrt_solver
 
 target_link_libraries(grrt_player
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
-  PRIVATE grrt)
+  PRIVATE grrt
+  PRIVATE rclcpp
+  )
+
+# ament_target_dependencies(grrt_player
+#   rclcpp
+#   # Other ament dependencies
+#   # This sets up include and linker paths
+# )
 
 # Add tests
 include(FetchContent)

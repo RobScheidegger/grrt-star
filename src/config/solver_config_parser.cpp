@@ -434,3 +434,52 @@ SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName) {
 
     return config;
 }
+
+Result SolverConfigParser::printSolution(std::ostream& stream, const SolverConfig::SharedPtr& config,
+                                         const SolverResult& solution) {
+    stream << solution.cost << std::endl;
+    stream << solution.success << std::endl;
+    stream << solution.time << std::endl;
+
+    // Print the path as a CSV line-by-line
+    const auto num_robots = config->robots.size();
+    for (const auto& state : solution.path) {
+        for (uint32_t i = 0; i < num_robots; i++) {
+            stream << state->roadmapStates[i];
+            if (i != num_robots - 1) {
+                stream << ",";
+            }
+        }
+        stream << std::endl;
+    }
+}
+
+Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResult& solution) {
+    std::ifstream file(fileName);
+    if (!file.is_open()) {
+        std::cerr << "Could not open file: " << fileName << std::endl;
+        return Result::Error("Could not open file: " + fileName);
+    }
+
+    std::string line;
+    std::getline(file, line);
+    solution.cost = std::stof(line);
+
+    std::getline(file, line);
+    solution.success = std::stoi(line);
+
+    std::getline(file, line);
+    solution.time = std::stof(line);
+
+    while (std::getline(file, line)) {
+        std::stringstream line_stream(line);
+        std::string cell;
+        std::vector<RoadmapVertexId> roadmapStates;
+        while (std::getline(line_stream, cell, ',')) {
+            roadmapStates.push_back(std::stoi(cell));
+        }
+        solution.path.push_back(std::make_shared<SearchVertex>(roadmapStates));
+    }
+
+    return Result::Ok();
+}
