@@ -6,6 +6,8 @@
 
 using namespace grrt;
 
+// TODO: siddharth: add cuda kernels
+
 PointCloudVoxelGPU::PointCloudVoxelGPU(const size_t num_points) : num_points(num_points) {
     cudaError_t err = cudaHostAlloc(&points, num_points * sizeof(Point), cudaHostAllocDefault);
     if (err != cudaSuccess) {

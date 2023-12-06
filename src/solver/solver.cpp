@@ -1,6 +1,8 @@
 #include "solver/solver.h"
 
 #include "graphs/search_tree.h"
+#include "graphs/search_vertex.h"
+#include "pkgs/rapidyaml.hpp"
 
 using namespace grrt;
 
@@ -38,11 +40,11 @@ void Solver::expand(SearchTree::SharedPtr& searchTree) {
     SearchVertex::SharedPtr v_near = searchTree->getNearestPoint(q_rand);
 
     // Sample a vertex adjacent to x_near.
-    SearchVertex::SharedPtr v_new = m_searchGraph->sampleAdjacentVertex(v_near);
+    SearchVertex::SharedPtr v_new = distanceOracle(v_near, q_rand);
 
     // Add x_new to the search tree.
     if (v_new != nullptr && !searchTree->contains(v_new)) {
-        searchTree->addVertex(v_new, std::make_shared<SearchDart>(v_near, v_new, 0));
+        searchTree->addVertex(v_new, std::make_shared<SearchDart>(v_near, v_new, 1));
     }
 }
 
@@ -78,3 +80,13 @@ SolverSolutions Solver::solve() {
 
     return solutions;
 }
+
+SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& nearVertex,
+                                               const SearchVertex::SharedPtr& randomVertex) const {
+
+    // Find the vertex in the graph that minimizes the angle between nearVertex and randomVertex.
+    // This is the vertex that is closest to randomVertex in the graph.
+
+    // TODO:
+    return m_searchGraph->sampleAdjacentVertex(nearVertex);
+};

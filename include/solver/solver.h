@@ -24,6 +24,9 @@ namespace grrt {
 
         SolverSolutions solve();
 
+        SearchVertex::SharedPtr distanceOracle(const SearchVertex::SharedPtr& nearVertex,
+                                               const SearchVertex::SharedPtr& randomVertex) const;
+
        private:
         const SolverConfig::SharedPtr m_config;
         SearchGraph::SharedPtr m_searchGraph;
