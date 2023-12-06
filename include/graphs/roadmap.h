@@ -19,7 +19,11 @@ namespace grrt {
         Roadmap(const std::string& name, const RobotType type) : robotType(type), name(name) {}
 
         RoadmapVertex::SharedPtr addVertex(const std::string& name, const RobotState::SharedPtr& state);
-        RoadmapDart::SharedPtr addDart(const RoadmapVertex::SharedPtr& state1, const RoadmapVertex::SharedPtr& state2);
+
+        RoadmapDart::SharedPtr addDart(const RoadmapVertex::SharedPtr& v1, const RoadmapVertex::SharedPtr& v2,
+                                       double cost);
+
+        RoadmapDart::SharedPtr addDart(const RoadmapVertex::SharedPtr& v1, const RoadmapVertex::SharedPtr& v2);
 
         std::vector<RoadmapDart::SharedPtr> getAdjacentDarts(const RoadmapVertex::SharedPtr& vertex) const {
             return adjacencyList[vertex->m_id];
