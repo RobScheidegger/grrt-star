@@ -56,6 +56,7 @@ add_executable(grrt_player
 
 target_link_libraries(grrt_solver
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
+  PRIVATE ${MPI_CXX_LIBRARIES}
   PRIVATE grrt)
 
 target_link_libraries(grrt_player
