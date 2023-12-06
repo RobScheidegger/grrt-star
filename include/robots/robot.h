@@ -26,5 +26,11 @@ namespace grrt {
         /// @param dart The roadmap dart edge to get the swept voxel region for.
         /// @return The swept voxel region for the given roadmap dart.
         virtual Voxel::SharedPtr getSweptVoxel(const RoadmapDart::SharedPtr& dart) = 0;
+
+        /// @brief Gets the voxel for a given robot at a given time along a roadmap edge.
+        /// @param dart The dart the robot is travelling over.
+        /// @param time The time (between 0 and the dart's cost) to get the voxel for.
+        /// @return A voxel representing the robot at the given time along the given dart.
+        virtual Voxel::SharedPtr getVoxel(const RoadmapDart::SharedPtr& dart, const double time) = 0;
     };
 }  // namespace grrt

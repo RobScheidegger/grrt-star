@@ -438,7 +438,6 @@ SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName) {
 Result SolverConfigParser::printSolution(std::ostream& stream, const SolverConfig::SharedPtr& config,
                                          const SolverResult& solution) {
     stream << solution.cost << std::endl;
-    stream << solution.success << std::endl;
     stream << solution.time << std::endl;
 
     // Print the path as a CSV line-by-line
@@ -464,9 +463,6 @@ Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResu
     std::string line;
     std::getline(file, line);
     solution.cost = std::stof(line);
-
-    std::getline(file, line);
-    solution.success = std::stoi(line);
 
     std::getline(file, line);
     solution.time = std::stof(line);

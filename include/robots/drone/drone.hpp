@@ -82,6 +82,18 @@ namespace grrt {
 
             return cloud;
         }
+
+        Voxel::SharedPtr getVoxel(const RoadmapDart::SharedPtr& dart, const double time) override {
+            PointCloudVoxel::SharedPtr cloud = std::make_shared<PointCloudVoxel>();
+
+            DroneState::SharedPtr start_state = std::dynamic_pointer_cast<DroneState>(dart->getStartState());
+            DroneState::SharedPtr end_state = std::dynamic_pointer_cast<DroneState>(dart->getEndState());
+
+            return cloud;
+        }
+
+       private:
+        void addPointsAtDistance(PointCloudVoxel::SharedPtr& cloud, const float sweptDistance) const {}
     };
 
     // we will make a drone gpu (another robot) and have
