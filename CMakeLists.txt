@@ -24,7 +24,7 @@ set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
-# Configure all of the library 
+# Configure all of the library
 
 if(NOT TARGET spdlog)
     # Stand-alone build
@@ -48,13 +48,13 @@ add_library(grrt
   src/solver/solver.cpp
 )
 
-add_executable(grrt_solver 
+add_executable(grrt_solver
   src/grrt_solver.cpp)
 
 add_executable(grrt_player
   src/grrt_player.cpp)
 
-target_link_libraries(grrt_solver 
+target_link_libraries(grrt_solver
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
   PRIVATE grrt)
 
@@ -74,9 +74,11 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(grrt_tests 
+add_executable(grrt_tests
   test/test_basic_drone_voxel_intersection.cpp
+  test/test_basic_all_pairs_shortest_path.cpp
 )
+
 target_link_libraries(grrt_tests gtest_main grrt)
 include(GoogleTest)
 gtest_discover_tests(grrt_tests)

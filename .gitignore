@@ -48,3 +48,6 @@ _deps
 grrt_solver
 grrt_player
 grrt_tests*
+
+.cache
+build

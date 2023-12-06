@@ -13,14 +13,17 @@ RoadmapVertex::SharedPtr Roadmap::addVertex(const std::string& name, const Robot
     return vertex;
 }
 
-RoadmapDart::SharedPtr Roadmap::addDart(const RoadmapVertex::SharedPtr& state1,
-                                        const RoadmapVertex::SharedPtr& state2) {
-    double cost = state1->getState()->distance(state2->getState());
-    auto dart = std::make_shared<RoadmapDart>(darts.size(), state1, state2, cost);
+RoadmapDart::SharedPtr Roadmap::addDart(const RoadmapVertex::SharedPtr& v1, const RoadmapVertex::SharedPtr& v2,
+                                        const double cost) {
+    auto dart = std::make_shared<RoadmapDart>(darts.size(), v1, v2, cost);
     darts.push_back(dart);
-    assert(state1->m_id < adjacencyList.size());
-    adjacencyList[state1->m_id].push_back(dart);
+    assert(v1->m_id < adjacencyList.size());
+    adjacencyList[v1->m_id].push_back(dart);
     return dart;
+}
+
+RoadmapDart::SharedPtr Roadmap::addDart(const RoadmapVertex::SharedPtr& v1, const RoadmapVertex::SharedPtr& v2) {
+    return this->addDart(v1, v2, v1->getState()->distance(v2->getState()));
 }
 
 void Roadmap::computeAllPairsShortestPath() {
