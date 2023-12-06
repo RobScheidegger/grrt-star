@@ -40,7 +40,7 @@ namespace grrt {
         Drone(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap)
             : IRobot(id, name, roadmap) {}
 
-        PointCloudVoxel::SharedPtr getSweptVoxel(const RoadmapDart::SharedPtr& dart) override {
+        Voxel::SharedPtr getSweptVoxel(const RoadmapDart::SharedPtr& dart) override {
             PointCloudVoxel::SharedPtr cloud = std::make_shared<PointCloudVoxel>();
 
             DroneState::SharedPtr start_state = std::dynamic_pointer_cast<DroneState>(dart->getStartState());
