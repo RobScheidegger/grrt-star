@@ -18,8 +18,4 @@ namespace grrt {
         /// @return True if the point is inside the voxel, false otherwise.
         virtual bool contains(const Point& point) const = 0;
     };
-
-    // Concept for a Voxel that can be implemented in other ways.
-    template <typename T>
-    concept IVoxel = std::is_base_of<Voxel, T>::value;
 }  // namespace grrt

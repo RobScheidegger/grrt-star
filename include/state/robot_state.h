@@ -31,8 +31,4 @@ namespace grrt {
         RoadmapStateId m_id = -1;
     };
 
-    /// @brief Concept for a Robot State.
-    template <typename T>
-    concept IRobotState = std::is_base_of<RobotState, T>::value;
-
 }  // namespace grrt

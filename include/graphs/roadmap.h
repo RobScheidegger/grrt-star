@@ -32,8 +32,9 @@ namespace grrt {
         void computeAllPairsShortestPath();
 
         RoadmapVertex::SharedPtr getVertex(const std::string& name) const {
-            if (!m_verticesByName.contains(name))
+            if (m_verticesByName.find(name) == m_verticesByName.end())
                 return nullptr;
+
             return m_verticesByName.at(name);
         }
 

@@ -237,7 +237,7 @@ Result parseRobots(const ryml::NodeRef& node, SolverConfig::SharedPtr config) {
             return res;
         }
 
-        if (!config->roadmaps.contains(roadmap_name)) {
+        if (config->roadmaps.find(roadmap_name) == config->roadmaps.end()) {
             return Result::Error("Unknown roadmap: " + roadmap_name);
         }
 

@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "robots/drone/drone.hpp"
+#include "robots/drone/drone_gpu.h"
 #include "robots/robot_factory.h"
 #include "voxels/point_cloud/point_cloud_voxel.hpp"
 
@@ -19,6 +20,13 @@ IRobot::SharedPtr RobotFactory::makeRobot(const RobotId id, const std::string& n
             switch (roadmap->robotType) {
                 case RobotType::DRONE:
                     return std::make_shared<Drone>(id, name, roadmap);
+                default:
+                    throw std::runtime_error("Unknown robot type");
+            }
+        case VoxelType::POINT_CLOUD_GPU:
+            switch (roadmap->robotType) {
+                case RobotType::DRONE:
+                    return std::make_shared<DroneGPU>(id, name, roadmap);
                 default:
                     throw std::runtime_error("Unknown robot type");
             }

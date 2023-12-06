@@ -10,7 +10,7 @@ namespace grrt {
             : IRobot(id, name, roadmap) {}
 
         Voxel::SharedPtr getSweptVoxel(const RoadmapDart::SharedPtr& dart) override {
-            return std::make_shared<PointCloudVoxelGPU>();
+            return std::make_shared<PointCloudVoxelGPU>(0);
             // TODO: siddharth
         }
     };

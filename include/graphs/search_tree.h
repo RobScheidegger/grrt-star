@@ -21,7 +21,9 @@ namespace grrt {
         /// @return The nearest point currently in the tree to the given point.
         SearchVertex::SharedPtr getNearestPoint(const SearchVertex::SharedPtr& vertex) const;
 
-        bool contains(const SearchVertex::SharedPtr& vertex) const { return m_vertexParents.contains(vertex); }
+        bool contains(const SearchVertex::SharedPtr& vertex) const {
+            return m_vertexParents.find(vertex) != m_vertexParents.end();
+        }
 
         void addVertex(const SearchVertex::SharedPtr& vertex, const SearchDart::SharedPtr& parentDart) {
             m_vertexParents[vertex] = parentDart;
