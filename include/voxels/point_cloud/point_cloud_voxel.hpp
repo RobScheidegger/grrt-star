@@ -59,7 +59,4 @@ namespace grrt {
         }
     };
 
-    // for the gpu variants, it will call the cuda kernel.
-
-    // All the cuda kernal stuff needs to be in not hpp files.
 }  // namespace grrt

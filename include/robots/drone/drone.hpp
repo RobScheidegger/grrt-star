@@ -6,10 +6,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-// TODO: produce the swept voxel for the drone and making an intersection to check if there is an intersepction.
-
-// need to check if an edge is valid. A voxel is just an edge.
-
 #define VOXEL_SWEEP_STEP_SIZE 0.05
 #define VOXEL_POINTS_SAMPLING_SIZE 1000
 
