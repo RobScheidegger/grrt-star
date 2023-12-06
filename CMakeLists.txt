@@ -22,6 +22,17 @@ include_directories(SYSTEM
   ${std_msgs_INCLUDE_DIRS}
   /opt/ros/humble/include/rosidl_typesupport_interface
   /opt/ros/humble/include/rcl_interfaces
+  /opt/ros/humble/
+  /opt/ros/humble/include
+  /opt/ros/humble/include/message_filters
+  /opt/ros/humble/include/sensor_msgs
+  /opt/ros/humble/include/geometry_msgs
+  /opt/ros/humble/include/tf2_geometry_msgs
+  /opt/ros/humble/include/tf2
+  /opt/ros/humble/include/tf2_ros
+  /opt/ros/humble/include/pcl_msgs
+  /usr/include/pcl-1.12/
+  /usr/include/eigen3/
 )
 
 # Required for THREADS
@@ -83,12 +94,6 @@ target_link_libraries(grrt_player
   PRIVATE grrt
   PRIVATE rclcpp
   )
-
-# ament_target_dependencies(grrt_player
-#   rclcpp
-#   # Other ament dependencies
-#   # This sets up include and linker paths
-# )
 
 # Add tests
 include(FetchContent)

@@ -50,6 +50,11 @@ ENV CUDA_HOME=/usr/local/cuda
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64
 ENV PATH=$PATH:$CUDA_HOME/bin
 
+# Additional ROS2 Deps
+RUN apt install ros-$ROS_DISTRO-pcl-conversions -y
+RUN apt install ros-$ROS_DISTRO-sensor-msgs -y
+RUN apt install ros-$ROS_DISTRO-pcl-msgs -y
+
 # Setup directory
 RUN mkdir -p /workplace
 WORKDIR /workplace
