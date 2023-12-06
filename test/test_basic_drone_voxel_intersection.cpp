@@ -46,10 +46,11 @@ TEST(DronePointCloudVoxels, TestParallelNearbySameRoadmap) {
 
     auto v1_left = roadmap->addVertex("v1_left", std::make_shared<DroneState>(Point(0, 0, -1), ROBOT_RADIUS));
     auto v1_right = roadmap->addVertex("v1_right", std::make_shared<DroneState>(Point(0, 0, 1), ROBOT_RADIUS));
+    // essentially 2.1
     auto v2_left = roadmap->addVertex(
-        "v2_left", std::make_shared<DroneState>(Point(ROBOT_RADIUS + VOXEL_RESOLUTION * 2, 0, -1), ROBOT_RADIUS));
+        "v2_left", std::make_shared<DroneState>(Point(ROBOT_RADIUS * 2 + VOXEL_RESOLUTION * 2, 0, -1), ROBOT_RADIUS));
     auto v2_right = roadmap->addVertex(
-        "v2_right", std::make_shared<DroneState>(Point(ROBOT_RADIUS + VOXEL_RESOLUTION * 2, 0, 1), ROBOT_RADIUS));
+        "v2_right", std::make_shared<DroneState>(Point(ROBOT_RADIUS * 2 + VOXEL_RESOLUTION * 2, 0, 1), ROBOT_RADIUS));
 
     auto d1 = roadmap->addDart(v1_left, v1_right);
     auto d2 = roadmap->addDart(v2_left, v2_right);
