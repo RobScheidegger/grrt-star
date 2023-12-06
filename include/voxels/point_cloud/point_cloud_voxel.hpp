@@ -6,7 +6,8 @@
 #include "voxels/voxel.h"
 #include "voxels/voxel_manager.h"
 
-#define PCL_VOXEL_RADIUS 0.1
+// this is the size of each point in the point cloud (used as a threshold to see if any points are in the range of any points from a different voxelspread).
+#define PCL_VOXEL_RADIUS 0.05
 
 namespace grrt {
 
