@@ -17,16 +17,19 @@ namespace grrt {
     /// @brief State representing a simple drone.
     class DroneState : public RobotState {
        public:
-        DroneState(const Point& point, const float radius) : m_position(point), m_radius(radius) {}
+        typedef std::shared_ptr<DroneState> SharedPtr;
 
-        std::string toString() const override { return "DroneState: " + m_position.toString(); }
+        DroneState(const Point& point, const float radius) : position(point), radius(radius) {}
 
-        Point getPosition() const { return m_position; }
-        float getRadius() const { return m_radius; }
+        std::string toString() const override { return "DroneState: " + position.toString(); }
 
-       private:
-        Point m_position;
-        float m_radius;
+        double distance(const RobotState::SharedPtr& other) const override {
+            DroneState::SharedPtr droneState = std::dynamic_pointer_cast<DroneState>(other);
+            return position.distance(droneState->position);
+        }
+
+        Point position;
+        float radius;
     };
 
     // point cloud resolution is the effective radius of each point in the point cloud

@@ -1,3 +1,4 @@
+#include <mpi.h>
 
 #include "pkgs/cli11.hpp"
 #include "spdlog/spdlog.h"
@@ -11,6 +12,7 @@ using namespace grrt;
 
 struct SolverCLIOptions {
     std::string configuration_file = "";
+    bool useMPI = false;
 };
 
 int main(int argc, char** argv) {
@@ -19,6 +21,7 @@ int main(int argc, char** argv) {
     SolverCLIOptions options;
 
     app.add_option("-c,--config", options.configuration_file, "Configuration file path");
+    app.add_option("-m,--mpi", options.useMPI, "Use MPI");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -27,6 +30,17 @@ int main(int argc, char** argv) {
     if (options.configuration_file.empty()) {
         spdlog::error("No configuration file specified");
         return 1;
+    }
+
+    int mpi_size = -1;
+    int mpi_rank = -1;
+
+    if (options.useMPI) {
+        spdlog::info("Using MPI");
+        MPI_Init(&argc, &argv);
+        MPI_Comm_rank(MPI_COMM_WORLD, &mpi_size);
+        MPI_Comm_size(MPI_COMM_WORLD, &mpi_rank);
+        spdlog::info("MPI rank {} of {}", mpi_rank, mpi_size);
     }
 
     spdlog::info("Loading configuration file: {}", options.configuration_file);

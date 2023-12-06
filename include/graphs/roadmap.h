@@ -19,8 +19,15 @@ namespace grrt {
         Roadmap(const std::string& name, const RobotType type) : robotType(type), name(name) {}
 
         RoadmapVertex::SharedPtr addVertex(const std::string& name, const RobotState::SharedPtr& state);
-        RoadmapDart::SharedPtr addDart(const RoadmapVertex::SharedPtr& state1, const RoadmapVertex::SharedPtr& state2,
-                                       const EdgeParameters& parameters);
+
+        RoadmapDart::SharedPtr addDart(const RoadmapVertex::SharedPtr& v1, const RoadmapVertex::SharedPtr& v2,
+                                       double cost);
+
+        RoadmapDart::SharedPtr addDart(const RoadmapVertex::SharedPtr& v1, const RoadmapVertex::SharedPtr& v2);
+
+        std::vector<RoadmapDart::SharedPtr> getAdjacentDarts(const RoadmapVertex::SharedPtr& vertex) const {
+            return adjacencyList[vertex->m_id];
+        }
 
         void computeAllPairsShortestPath();
 
@@ -32,14 +39,15 @@ namespace grrt {
 
         std::vector<RoadmapVertex::SharedPtr> vertices;
         std::vector<RoadmapDart::SharedPtr> darts;
-        std::unordered_map<std::string, std::unordered_map<std::string, double>> distances;
+        std::vector<std::vector<RoadmapDart::SharedPtr>> adjacencyList;
+        std::vector<std::vector<double>> distances;
         RobotType robotType;
         std::string name;
 
        private:
         std::unordered_map<std::string, RoadmapVertex::SharedPtr> m_verticesByName;
 
-        void dijkstra(const RoadmapVertex::SharedPtr& start, const RoadmapVertex::SharedPtr& goal);
+        void dijkstra(const RoadmapVertex::SharedPtr& start);
     };
 
 }  // namespace grrt
