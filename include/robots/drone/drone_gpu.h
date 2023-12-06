@@ -54,5 +54,15 @@ namespace grrt {
 
             return cloud;
         }
+
+        // TODO
+        Voxel::SharedPtr getVoxel(const RoadmapDart::SharedPtr& dart, const double time) override {
+            PointCloudVoxel::SharedPtr cloud = std::make_shared<PointCloudVoxel>();
+
+            DroneState::SharedPtr start_state = std::dynamic_pointer_cast<DroneState>(dart->getStartState());
+            DroneState::SharedPtr end_state = std::dynamic_pointer_cast<DroneState>(dart->getEndState());
+
+            return cloud;
+        }
     };
 }  // namespace grrt

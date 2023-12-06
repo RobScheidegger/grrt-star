@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 
@@ -35,8 +36,6 @@ TEST(SolverExpansion, TestBasicRRTExpansion) {
     auto voxel1 = drone1.getSweptVoxel(d1);
     auto voxel2 = drone2.getSweptVoxel(d2);
 
-    std::cout << "hello" << std::endl;
-
     VoxelManager::SharedPtr voxel_manager = factory->makeVoxelManager();
     EXPECT_TRUE(voxel_manager->intersect(voxel1, voxel2));
 
@@ -47,4 +46,8 @@ TEST(SolverExpansion, TestBasicRRTExpansion) {
     config->problems.push_back(SolverProblem("Test Drone Roadmap", start_vertex, end_vertex));
 
     Solver solver = Solver(config);
+
+    auto solutions = solver.solve();
+
+    ASSERT_FALSE(solutions->at("Test Drone Roadmap").success);
 }

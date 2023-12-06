@@ -55,6 +55,7 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
 
     while (!cancellationToken) {
         for (uint32_t i = 0; i < num_iterations; i++) {
+            std::cout << "Iteration " << i << " of " << num_iterations << "\n";
             expand(T);
         }
 
