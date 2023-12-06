@@ -1,4 +1,6 @@
 #include "graphs/search_graph.h"
+#include "graphs/roadmap_vertex.h"
+#include "graphs/search_vertex.h"
 
 using namespace grrt;
 
@@ -13,6 +15,20 @@ SearchVertex::SharedPtr SearchGraph::getRandomVertex() const {
 }
 
 SearchVertex::SharedPtr SearchGraph::sampleAdjacentVertex(const SearchVertex::SharedPtr& vertex) const {
-    // TODO
-    return nullptr;
+    auto adjacent_vertices_id = std::vector<RoadmapVertexId>();
+
+    for (int i = 0; i < roadmaps.size(); i++) {
+        auto roadmap = roadmaps[i];
+        auto darts = roadmap->getAdjacentDarts(roadmap->vertices[vertex->roadmapStates[i]]);
+        // randomly select a dart
+        if (darts.size() > 0) {
+            int dartIndex = rand() % darts.size();
+            auto dart = darts[dartIndex];
+            auto adjacentVertex = dart->m_end;
+            auto adjacentRoadmapState = adjacentVertex->m_id;
+            adjacent_vertices_id.push_back(adjacentRoadmapState);
+        }
+    }
+
+    return std::make_shared<SearchVertex>(adjacent_vertices_id);
 }
