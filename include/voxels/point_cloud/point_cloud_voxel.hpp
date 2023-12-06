@@ -36,8 +36,11 @@ namespace grrt {
         typedef std::shared_ptr<PointCloudVoxelManager> SharedPtr;
 
         bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2) override {
-            // will have to cast the volex to a PointCloudVoxel.
+            PointCloudVoxel::SharedPtr pcl_voxel_1 = std::dynamic_pointer_cast<PointCloudVoxel>(voxel_1);
+            PointCloudVoxel::SharedPtr pcl_voxel_2 = std::dynamic_pointer_cast<PointCloudVoxel>(voxel_2);
+
             // TODO: siddharth
+
             return false;
         }
 
