@@ -79,6 +79,7 @@ enable_testing()
 add_executable(grrt_tests
   test/test_basic_drone_voxel_intersection.cpp
   test/test_basic_all_pairs_shortest_path.cpp
+  test/test_basic_expansion.cpp
 )
 
 target_link_libraries(grrt_tests gtest_main grrt)
