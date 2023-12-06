@@ -15,3 +15,8 @@ RoadmapDart::SharedPtr Roadmap::addDart(const RoadmapVertex::SharedPtr& state1, 
     darts.push_back(dart);
     return dart;
 }
+
+void Roadmap::dijkstra(const RoadmapVertex::SharedPtr& start, const RoadmapVertex::SharedPtr& goal) {
+    // Dijkstra's Algorithm
+    // Initialize all distances to infinity
+}

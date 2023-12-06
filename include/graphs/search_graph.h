@@ -13,9 +13,15 @@ namespace grrt {
 
         SearchGraph(const std::vector<Roadmap::SharedPtr>& roadmaps) : roadmaps(roadmaps) {}
 
+        /// @brief Randomly samples a vertex from the search (tensor) graph.
+        /// @return A randomly sampled vertex.
         SearchVertex::SharedPtr getRandomVertex() const;
 
-        SearchVertex::SharedPtr getNearestVertex() const;
+        /// @brief Randomly samples a vertex from the search (tensor) graph that is adjacent to the given vertex.
+        /// Note that this vertex is _not_ guarenteed to have a collision-free edge to the given vertex.
+        /// @param vertex The vertex to sample an adjacent vertex to.
+        /// @return A randomly sampled vertex adjacent to the given vertex.
+        SearchVertex::SharedPtr sampleAdjacentVertex(const SearchVertex::SharedPtr& vertex) const;
 
         const std::vector<Roadmap::SharedPtr> roadmaps;
     };

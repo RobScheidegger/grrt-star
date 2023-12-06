@@ -6,7 +6,11 @@ using namespace grrt;
 
 Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
     // Initialize the search graph (generic, will be shared between all problems)
-    m_searchGraph = std::make_shared<SearchGraph>(m_config->roadmaps);
+    std::vector<Roadmap::SharedPtr> roadmaps;
+    for (const auto& pair : m_config->roadmaps) {
+        roadmaps.push_back(pair.second);
+    }
+    m_searchGraph = std::make_shared<SearchGraph>(roadmaps);
 }
 
 SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
@@ -26,7 +30,21 @@ SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const Se
     return result;
 }
 
-void Solver::expand(SearchTree::SharedPtr& searchTree) {}
+void Solver::expand(SearchTree::SharedPtr& searchTree) {
+    // Sample a random vertex.
+    SearchVertex::SharedPtr q_rand = m_searchGraph->getRandomVertex();
+
+    // Find the nearest vertex in the search tree.
+    SearchVertex::SharedPtr v_near = searchTree->getNearestPoint(q_rand);
+
+    // Sample a vertex adjacent to x_near.
+    SearchVertex::SharedPtr v_new = m_searchGraph->sampleAdjacentVertex(v_near);
+
+    // Add x_new to the search tree.
+    if (v_new != nullptr && !searchTree->contains(v_new)) {
+        searchTree->addVertex(v_new, std::make_shared<SearchDart>(v_near, v_new, 0));
+    }
+}
 
 SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
     SearchTree::SharedPtr T = std::make_shared<SearchTree>(m_searchGraph, problem.start);
@@ -57,4 +75,6 @@ SolverSolutions Solver::solve() {
         auto result = solveProblem(problem, cancellationToken);
         solutions->insert(std::make_pair(problem.name, result));
     }
+
+    return solutions;
 }

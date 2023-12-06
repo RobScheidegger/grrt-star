@@ -22,6 +22,8 @@ namespace grrt {
         RoadmapDart::SharedPtr addDart(const RoadmapVertex::SharedPtr& state1, const RoadmapVertex::SharedPtr& state2,
                                        const EdgeParameters& parameters);
 
+        void computeAllPairsShortestPath();
+
         RoadmapVertex::SharedPtr getVertex(const std::string& name) const {
             if (!m_verticesByName.contains(name))
                 return nullptr;
@@ -30,10 +32,14 @@ namespace grrt {
 
         std::vector<RoadmapVertex::SharedPtr> vertices;
         std::vector<RoadmapDart::SharedPtr> darts;
+        std::unordered_map<std::string, std::unordered_map<std::string, double>> distances;
         RobotType robotType;
         std::string name;
 
        private:
         std::unordered_map<std::string, RoadmapVertex::SharedPtr> m_verticesByName;
+
+        void dijkstra(const RoadmapVertex::SharedPtr& start, const RoadmapVertex::SharedPtr& goal);
     };
+
 }  // namespace grrt

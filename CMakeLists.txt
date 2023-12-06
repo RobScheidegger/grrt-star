@@ -34,12 +34,14 @@ endif()
 include_directories(include)
 
 # Add a library for all of the headers and non-executable cpp files
-add_library(grrt_lib
+add_library(grrt
   src/config/solver_config_parser.cpp
 
   src/robots/robot_factory.cpp
 
   src/graphs/roadmap.cpp
+  src/graphs/search_graph.cpp
+  src/graphs/search_tree.cpp
 
   src/solver/solver.cpp
 )
@@ -52,11 +54,11 @@ add_executable(grrt_player
 
 target_link_libraries(grrt_solver 
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
-  PRIVATE grrt_lib)
+  PRIVATE grrt)
 
 target_link_libraries(grrt_player
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
-  PRIVATE grrt_lib)
+  PRIVATE grrt)
 
 
 
@@ -73,6 +75,6 @@ enable_testing()
 add_executable(grrt_tests 
   test/test_basic_drone_voxel_intersection.cpp
 )
-target_link_libraries(grrt_tests gtest_main grrt_lib)
+target_link_libraries(grrt_tests gtest_main grrt)
 include(GoogleTest)
 gtest_discover_tests(grrt_tests)
