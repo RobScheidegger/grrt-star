@@ -25,6 +25,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
 RUN apt install libspdlog-dev -y
 RUN apt install libeigen3-dev -y
 RUN apt install gdb -y
+RUN apt install plocate -y
+RUN apt install mpich -y
+
 
 # RVIZ2 Forwarding
 ENV NVIDIA_VISIBLE_DEVICES \

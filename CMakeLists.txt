@@ -6,7 +6,9 @@ project(
   LANGUAGES CXX)
 
 find_package(OpenMP)
+find_package(MPI REQUIRED)
 
+include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 
 # Required for THREADS
 set(CMAKE_THREAD_LIBS_INIT "-lpthread")
