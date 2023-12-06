@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "state/system_state.h"
+#include "graphs/search_vertex.h"
 
 namespace grrt {
 
@@ -11,8 +11,8 @@ namespace grrt {
         /// @brief The semantic name of the problem, for logging purposes.
         std::string name;
         /// @brief The starting state of the problem.
-        SystemState::SharedPtr start;
+        SearchVertex::SharedPtr start;
         /// @brief The goal state of the problem.
-        SystemState::SharedPtr goal;
+        SearchVertex::SharedPtr goal;
     };
 }  // namespace grrt

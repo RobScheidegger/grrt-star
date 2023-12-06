@@ -47,3 +47,4 @@ _deps
 .vscode
 grrt_solver
 grrt_player
+grrt_tests*

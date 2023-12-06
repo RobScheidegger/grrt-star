@@ -5,6 +5,8 @@
 #include "config/solver_config.h"
 #include "config/solver_config_parser.h"
 
+#include "solver/solver.h"
+
 using namespace grrt;
 
 struct SolverCLIOptions {
@@ -37,6 +39,13 @@ int main(int argc, char** argv) {
 
     spdlog::info("Configuration file loaded with {} roadmaps, {} robots, and {} problems", config->roadmaps.size(),
                  config->robots.size(), config->problems.size());
+
+    Solver::SharedPtr solver = std::make_shared<Solver>(config);
+
+    auto solutions = solver->solve();
+    for (const auto& solution : *solutions) {
+        spdlog::info("Solution: cost {} success {}", solution.second.cost, solution.second.success);
+    }
 
     return 0;
 }
