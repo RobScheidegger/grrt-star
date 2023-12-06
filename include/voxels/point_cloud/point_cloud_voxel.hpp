@@ -6,7 +6,8 @@
 #include "voxels/voxel.h"
 #include "voxels/voxel_manager.h"
 
-#define PCL_VOXEL_RADIUS 0.1
+// this is the size of each point in the point cloud (used as a threshold to see if any points are in the range of any points from a different voxelspread).
+#define PCL_VOXEL_RADIUS 0.05
 
 namespace grrt {
 
@@ -35,8 +36,11 @@ namespace grrt {
         typedef std::shared_ptr<PointCloudVoxelManager> SharedPtr;
 
         bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2) override {
-            // will have to cast the volex to a PointCloudVoxel.
+            PointCloudVoxel::SharedPtr pcl_voxel_1 = std::dynamic_pointer_cast<PointCloudVoxel>(voxel_1);
+            PointCloudVoxel::SharedPtr pcl_voxel_2 = std::dynamic_pointer_cast<PointCloudVoxel>(voxel_2);
+
             // TODO: siddharth
+
             return false;
         }
 
