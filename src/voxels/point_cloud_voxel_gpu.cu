@@ -13,18 +13,16 @@ using namespace grrt;
 // TODO: siddharth: add cuda kernels
 
 PointCloudVoxelGPU::PointCloudVoxelGPU(const size_t num_points) : num_points(num_points) {
-    // TODO: add a destructor
     cudaError_t err = cudaHostAlloc(&points, num_points * sizeof(Point), cudaHostAllocDefault);
     if (err != cudaSuccess) {
         throw std::runtime_error("Failed to allocate memory for point cloud voxel");
     }
 }
 
-// TODO: create PointCloudVoxelManager but for gpu with the intersect function
 
 void PointCloudVoxelGPU::addPoint(const Point& point) {
     if (this->current_num_points >= this->num_points) {
-        // spdlog::error("Point cloud voxel GPU is full");
+        throw std::runtime_error("Point cloud voxel GPU is full");
     }
     this->points[this->current_num_points] = point.x;
     this->points[this->current_num_points + 1] = point.y;

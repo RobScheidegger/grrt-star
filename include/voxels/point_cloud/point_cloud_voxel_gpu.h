@@ -24,6 +24,13 @@ namespace grrt {
 
         bool contains(const Point& point) const override;
 
+        ~PointCloudVoxelGPU(){
+            cudaError_t err = cudaFree(points);
+            if (err != cudaSuccess) {
+                throw std::runtime_error("Failed to free points memory for point cloud voxel gpu");
+            }
+        }
+
        private:
         const float m_radius = PCL_VOXEL_RADIUS;
 
@@ -32,12 +39,12 @@ namespace grrt {
         size_t current_num_points = 0;
     };
 
-    class PointCloudGPUVoxelManager : public VoxelManager {
+    class PointCloudVoxelGPUManager : public VoxelManager {
        public:
-        typedef std::shared_ptr<PointCloudGPUVoxelManager> SharedPtr;
+        typedef std::shared_ptr<PointCloudVoxelGPUManager> SharedPtr;
 
         bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2) override {
-            // will have to cast the volex to a PointCloudVoxel.
+            // will have to cast the vortex to a PointCloudVoxelGPU.
             // TODO: siddharth
             return false;
         }
