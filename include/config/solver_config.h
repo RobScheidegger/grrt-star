@@ -21,5 +21,6 @@ namespace grrt {
         std::vector<SolverProblem> problems;
 
         RobotFactory::SharedPtr robotFactory;
+        bool useMPI = false;
     };
 }  // namespace grrt

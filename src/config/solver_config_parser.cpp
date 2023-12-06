@@ -179,7 +179,7 @@ Result parseRoadmaps(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
                         return Result::Error("Unknown state: " + to_state_name);
                     }
 
-                    roadmap_ptr->addDart(vertex, state_name_to_vertex[to_state_name], EdgeParameters());
+                    roadmap_ptr->addDart(vertex, state_name_to_vertex[to_state_name]);
                 }
 
             } else {
@@ -189,7 +189,7 @@ Result parseRoadmaps(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
                         continue;
                     }
 
-                    roadmap_ptr->addDart(vertex, other_vertex, EdgeParameters());
+                    roadmap_ptr->addDart(vertex, other_vertex);
                 }
             }
         }

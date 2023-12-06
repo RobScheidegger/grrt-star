@@ -9,11 +9,8 @@
 #include "state/robot_state.h"
 #include "voxels/voxel.h"
 
-#define EMPTY_EDGE_ID -1ull
-
 namespace grrt {
 
-    typedef std::unordered_map<std::string, std::string> EdgeParameters;
     typedef int16_t RoadmapDartId;
 
     /// @brief Representation of a roadmap edge that
@@ -22,8 +19,8 @@ namespace grrt {
         typedef std::shared_ptr<RoadmapDart> SharedPtr;
 
         RoadmapDart(const RoadmapDartId id, const RoadmapVertex::SharedPtr& start, const RoadmapVertex::SharedPtr& end,
-                    const EdgeParameters& parameters)
-            : m_start(start), m_end(end), m_parameters(parameters), m_id(id) {}
+                    const double cost)
+            : m_start(start), m_end(end), cost(cost), m_id(id) {}
 
         /// @brief Get a string representation of the robot state.
         /// @return A string representation of the robot state.
@@ -37,14 +34,14 @@ namespace grrt {
 
         RobotState::SharedPtr getEndState() const { return m_end->getState(); }
 
-        const EdgeParameters& getParameters() const { return m_parameters; }
-
         const RoadmapDartId getId() const { return m_id; }
 
-       private:
         const RoadmapVertex::SharedPtr m_start;
+
         const RoadmapVertex::SharedPtr m_end;
-        const EdgeParameters m_parameters;
+        const double cost;
+
+       private:
         const RoadmapDartId m_id;
 
         Voxel::SharedPtr m_voxel = nullptr;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <math.h>
 #include <iostream>
 #include <string>
 
@@ -19,6 +20,11 @@ namespace grrt {
         /// @param y The `y`-coordinate of the point.
         /// @param z The `z`-coordinate of the point (up direction).
         Point(const float x, const float y, const float z) : x(x), y(y), z(z) {}
+
+        double distance(const Point& other) const {
+            return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y) +
+                             (z - other.z) * (z - other.z));
+        }
 
         std::string toString() const {
             return "Point(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")";

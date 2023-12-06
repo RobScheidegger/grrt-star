@@ -18,6 +18,8 @@ namespace grrt {
         /// @return A string representation of the robot state.
         virtual std::string toString() const = 0;
 
+        virtual double distance(const RobotState::SharedPtr& other) const = 0;
+
         /// @brief Construct a new Robot State object
         void setId(const RoadmapStateId id) { m_id = id; }
 

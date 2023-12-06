@@ -19,9 +19,8 @@ TEST(DronePointCloudVoxels, TestHeadOnCollision) {
     auto v1 = roadmap->addVertex("v1", std::make_shared<DroneState>(Point(-1, 0, 0), 1.0));
     auto v2 = roadmap->addVertex("v2", std::make_shared<DroneState>(Point(1, 0, 0), 1.0));
 
-    EdgeParameters params;
-    auto d1 = roadmap->addDart(v1, v2, params);
-    auto d2 = roadmap->addDart(v2, v1, params);
+    auto d1 = roadmap->addDart(v1, v2);
+    auto d2 = roadmap->addDart(v2, v1);
 
     Drone drone1(1, "Drone 1", roadmap);
     Drone drone2(2, "Drone 2", roadmap);
@@ -42,7 +41,7 @@ TEST(DronePointCloudVoxels, TestParallelNearbySameRoadmap) {
 
     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD);
     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
-    EdgeParameters params;
+
     auto v1_left = roadmap->addVertex("v1_left", std::make_shared<DroneState>(Point(0, 0, -1), ROBOT_RADIUS));
     auto v1_right = roadmap->addVertex("v1_right", std::make_shared<DroneState>(Point(0, 0, 1), ROBOT_RADIUS));
     auto v2_left = roadmap->addVertex(
@@ -50,8 +49,8 @@ TEST(DronePointCloudVoxels, TestParallelNearbySameRoadmap) {
     auto v2_right = roadmap->addVertex(
         "v2_right", std::make_shared<DroneState>(Point(ROBOT_RADIUS + VOXEL_RESOLUTION * 2, 0, 1), ROBOT_RADIUS));
 
-    auto d1 = roadmap->addDart(v1_left, v1_right, params);
-    auto d2 = roadmap->addDart(v2_left, v2_right, params);
+    auto d1 = roadmap->addDart(v1_left, v1_right);
+    auto d2 = roadmap->addDart(v2_left, v2_right);
 
     Drone drone1(1, "Drone 1", roadmap);
     Drone drone2(2, "Drone 2", roadmap);

@@ -16,8 +16,9 @@ namespace grrt {
 
         RobotState::SharedPtr getState() const { return m_state; }
 
-       private:
         const RoadmapVertexId m_id;
+
+       private:
         const RobotState::SharedPtr m_state;
     };
 }  // namespace grrt
