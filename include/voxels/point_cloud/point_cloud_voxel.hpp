@@ -13,6 +13,8 @@ namespace grrt {
 
     class PointCloudVoxel : public Voxel {
        public:
+        typedef std::shared_ptr<PointCloudVoxel> SharedPtr;
+
         PointCloudVoxel() {}
 
         /// @brief Gets the radius of each point in the point cloud, in meters.

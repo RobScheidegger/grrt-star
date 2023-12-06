@@ -46,6 +46,7 @@ add_library(grrt
   src/graphs/search_tree.cpp
 
   src/solver/solver.cpp
+  src/voxels/point_cloud_voxel_gpu.cu
 )
 
 add_executable(grrt_solver

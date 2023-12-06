@@ -9,7 +9,7 @@
 
 using namespace grrt;
 
-TEST(DronePointCloudVoxels, TestHeadOnCollision) {
+TEST(PointCloudVoxels, TestHeadOnCollision) {
     //
     // Checks that two voxels intersecting each other actually intersect
     //
