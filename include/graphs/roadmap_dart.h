@@ -14,7 +14,7 @@
 namespace grrt {
 
     typedef std::unordered_map<std::string, std::string> EdgeParameters;
-    typedef uint64_t RoadmapDartId;
+    typedef int16_t RoadmapDartId;
 
     /// @brief Representation of a roadmap edge that
     class RoadmapDart {

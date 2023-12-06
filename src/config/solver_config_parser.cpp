@@ -280,8 +280,8 @@ Result parseProblems(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
             return Result::Error("start must be a map");
         }
 
-        SystemState::SharedPtr start_state = std::make_shared<SystemState>(num_robots);
-        SystemState::SharedPtr end_state = std::make_shared<SystemState>(num_robots);
+        std::vector<RoadmapVertexId> start_state_ids(num_robots);
+        std::vector<RoadmapVertexId> end_state_ids(num_robots);
 
         std::unordered_map<std::string, RobotState::SharedPtr> robot_name_to_state;
         for (auto state : start) {
@@ -303,7 +303,7 @@ Result parseProblems(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
                 return Result::Error("Unknown state: " + state_name_str);
             }
 
-            start_state->roadmapStates[(*robot)->id] = robot_state->getState()->getId();
+            start_state_ids[(*robot)->id] = robot_state->getState()->getId();
         }
 
         // Same for goal state
@@ -334,8 +334,11 @@ Result parseProblems(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
                 return Result::Error("Unknown state: " + state_name_str);
             }
 
-            end_state->roadmapStates[(*robot)->id] = robot_state->getState()->getId();
+            end_state_ids[(*robot)->id] = robot_state->getState()->getId();
         }
+
+        SearchVertex::SharedPtr start_state = std::make_shared<SearchVertex>(start_state_ids);
+        SearchVertex::SharedPtr end_state = std::make_shared<SearchVertex>(end_state_ids);
 
         config->problems.push_back(SolverProblem(name, start_state, end_state));
     }
