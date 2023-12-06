@@ -28,6 +28,8 @@ TEST(DronePointCloudVoxels, TestHeadOnCollision) {
     auto voxel1 = drone1.getSweptVoxel(d1);
     auto voxel2 = drone2.getSweptVoxel(d2);
 
+    std::cout << "hello" << std::endl;
+
     VoxelManager::SharedPtr voxel_manager = factory->makeVoxelManager();
     EXPECT_TRUE(voxel_manager->intersect(voxel1, voxel2));
 }

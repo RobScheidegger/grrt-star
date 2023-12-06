@@ -47,13 +47,12 @@ namespace grrt {
             DroneState::SharedPtr end_state = std::dynamic_pointer_cast<DroneState>(dart->getEndState());
 
             // generate fibonacci sphere: https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
-            float phi = M_PI * (sqrt(5.) - 1.);  // golden angle in radian
+            float phi = M_PI * (std::sqrt(5.) - 1.);  // golden angle in radian
 
-            Point start_point = start_state->getPosition();
-            Point end_point = end_state->getPosition();
+            Point start_point = start_state->position;
+            Point end_point = end_state->position;
 
-            float sweep_length = sqrt(pow(end_point.x - start_point.x, 2) + pow(end_point.y - start_point.y, 2) +
-                                      pow(end_point.z - start_point.z, 2));
+            float sweep_length = start_point.distance(end_point);
 
             float swept_distance = 0;
             while (swept_distance < sweep_length) {
@@ -69,14 +68,13 @@ namespace grrt {
                 for (int i = 1; i <= VOXEL_POINTS_SAMPLING_SIZE; i++) {
                     float y = 1 - (i / float(VOXEL_POINTS_SAMPLING_SIZE - 1)) * 2;  // y goes from 1 to - 1
 
-                    float radius = sqrt(1 - y * y);  // radius at y
-                    float theta = phi * i;           // golden angle increment
+                    float radius = std::sqrt(1 - y * y);  // radius at y
+                    float theta = phi * i;                // golden angle increment
 
                     float x = cos(theta) * radius;
                     float z = sin(theta) * radius;
-                    cloud->addPoint(Point(x * start_state->getRadius() + offset.x,
-                                          y * start_state->getRadius() + offset.y,
-                                          z * start_state->getRadius() + offset.z));
+                    cloud->addPoint(Point(x * start_state->radius + offset.x, y * start_state->radius + offset.y,
+                                          z * start_state->radius + offset.z));
                 }
 
                 swept_distance += VOXEL_SWEEP_STEP_SIZE;
