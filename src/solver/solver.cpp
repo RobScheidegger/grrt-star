@@ -1,8 +1,10 @@
 #include "solver/solver.h"
+#include "spdlog/spdlog.h"
 
 #include "graphs/search_tree.h"
 #include "graphs/search_vertex.h"
 #include "pkgs/rapidyaml.hpp"
+
 
 using namespace grrt;
 
@@ -51,11 +53,20 @@ void Solver::expand(SearchTree::SharedPtr& searchTree) {
 SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
     SearchTree::SharedPtr T = std::make_shared<SearchTree>(m_searchGraph, problem.start);
 
+    // compute shortest paths over all roadmaps
+    std::cout << "test" << std::endl;
+    spdlog::info("Start computing shortest paths");
+    for (const auto& roadmap : m_searchGraph->roadmaps) {
+        roadmap->computeAllPairsShortestPath();
+    }
+    spdlog::info("Finished computing shortest paths");
+
     const int num_iterations = 100;
 
+    int iterations = 0;
     while (!cancellationToken) {
+        spdlog::info("Iteration {}", iterations);
         for (uint32_t i = 0; i < num_iterations; i++) {
-            std::cout << "Iteration " << i << " of " << num_iterations << "\n";
             expand(T);
         }
 
@@ -72,6 +83,12 @@ SolverSolutions Solver::solve() {
     std::atomic_bool cancellationToken(false);
 
     SolverSolutions solutions = std::make_unique<std::unordered_map<std::string, SolverResult>>();
+
+    // set cancellation token to true in 10 seconds
+    std::thread([&cancellationToken]() {
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        cancellationToken = true;
+    }).detach();
 
     for (const auto& problem : m_config->problems) {
 

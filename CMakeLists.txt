@@ -14,9 +14,9 @@ find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rmw_fastrtps_cpp QUIET)
 
-include_directories(SYSTEM 
-  ${MPI_INCLUDE_PATH} 
-  ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} 
+include_directories(SYSTEM
+  ${MPI_INCLUDE_PATH}
+  ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
   ${rclcpp_INCLUDE_DIRS}
   ${rmw_INCLUDE_DIRS}
   ${std_msgs_INCLUDE_DIRS}
@@ -46,7 +46,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3")
 set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
 # Configure all of the library
@@ -81,19 +81,10 @@ add_library(grrt
 add_executable(grrt_solver
   src/grrt_solver.cpp)
 
-add_executable(grrt_player
-  src/grrt_player.cpp)
-
 target_link_libraries(grrt_solver
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
   PRIVATE ${MPI_CXX_LIBRARIES}
   PRIVATE grrt)
-
-target_link_libraries(grrt_player
-  PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
-  PRIVATE grrt
-  PRIVATE rclcpp
-  )
 
 # Add tests
 include(FetchContent)
@@ -111,6 +102,10 @@ add_executable(grrt_tests
   test/test_basic_expansion.cpp
 )
 
-target_link_libraries(grrt_tests gtest_main grrt)
+target_link_libraries(grrt_tests
+  gtest_main
+  grrt
+  spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
+)
 include(GoogleTest)
 gtest_discover_tests(grrt_tests)

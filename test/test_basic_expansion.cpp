@@ -45,6 +45,7 @@ TEST(SolverExpansion, TestBasicRRTExpansion) {
     config->robots.push_back(std::make_shared<Drone>(2, "Drone 2", roadmap));
     config->problems.push_back(SolverProblem("Test Drone Roadmap", start_vertex, end_vertex));
 
+    std::cout << "test" << std::endl;
     Solver solver = Solver(config);
 
     auto solutions = solver.solve();
