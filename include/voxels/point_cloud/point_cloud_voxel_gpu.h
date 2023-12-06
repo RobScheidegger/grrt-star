@@ -20,7 +20,7 @@ namespace grrt {
         /// @brief Gets the radius of each point in the point cloud, in meters.
         inline float getRadius() const { return m_radius; }
 
-        inline void addPoint(const Point& point);
+        void addPoint(const Point& point);
 
         bool contains(const Point& point) const override;
 
