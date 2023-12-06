@@ -54,8 +54,7 @@ namespace grrt {
 
             float sweep_length = start_point.distance(end_point);
 
-            float swept_distance = 0;
-            while (swept_distance < sweep_length) {
+            for (float swept_distance = 0; swept_distance <= sweep_length; swept_distance += VOXEL_SWEEP_STEP_SIZE) {
                 float a = swept_distance;
                 float b = sweep_length - swept_distance;
 
@@ -76,8 +75,6 @@ namespace grrt {
                     cloud->addPoint(Point(x * start_state->radius + offset.x, y * start_state->radius + offset.y,
                                           z * start_state->radius + offset.z));
                 }
-
-                swept_distance += VOXEL_SWEEP_STEP_SIZE;
             }
 
             return cloud;

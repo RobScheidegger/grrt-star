@@ -13,6 +13,7 @@ namespace grrt {
     struct SolverResult {
         typedef std::shared_ptr<SolverResult> SharedPtr;
 
+        SolverResult() : success(true) {}
         SolverResult(bool success) : success(success) {}
 
         /// @brief The solution path, if it was found.
@@ -21,6 +22,8 @@ namespace grrt {
         bool success;
         /// @brief Cost of the solution, if found.
         double cost;
+        /// @brief The time taken to solve the problem (in seconds).
+        double time;
 
         static SolverResult fail() { return SolverResult(false); }
     };

@@ -1,5 +1,5 @@
-
 #include "pkgs/cli11.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "spdlog/spdlog.h"
 
 #include "config/solver_config.h"
@@ -11,6 +11,7 @@ using namespace grrt;
 
 struct SolverCLIOptions {
     std::string configuration_file = "";
+    std::string solution_file = "";
 };
 
 int main(int argc, char** argv) {
@@ -19,6 +20,7 @@ int main(int argc, char** argv) {
     SolverCLIOptions options;
 
     app.add_option("-c,--config", options.configuration_file, "Configuration file path");
+    app.add_option("-s,--solution", options.solution_file, "Solution file path");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -26,6 +28,11 @@ int main(int argc, char** argv) {
 
     if (options.configuration_file.empty()) {
         spdlog::error("No configuration file specified");
+        return 1;
+    }
+
+    if (options.solution_file.empty()) {
+        spdlog::error("No solution file specified");
         return 1;
     }
 
@@ -40,12 +47,10 @@ int main(int argc, char** argv) {
     spdlog::info("Configuration file loaded with {} roadmaps, {} robots, and {} problems", config->roadmaps.size(),
                  config->robots.size(), config->problems.size());
 
-    Solver::SharedPtr solver = std::make_shared<Solver>(config);
-
-    auto solutions = solver->solve();
-    for (const auto& solution : *solutions) {
-        spdlog::info("Solution: cost {} success {}", solution.second.cost, solution.second.success);
-    }
+    // Load in the solution file
+    spdlog::info("Loading solution file: {}", options.solution_file);
+    SolverResult solution;
+    Result result = SolverConfigParser::parseSolution(options.solution_file, solution);
 
     return 0;
 }
