@@ -3,6 +3,10 @@
 #include "robots/robot.h"
 #include "voxels/point_cloud/point_cloud_voxel.hpp"
 
+// TODO: produce the swept voxel for the drone and making an intersection to check if there is an intersepction.
+
+// need to check if an edge is valid. A voxel is just an edge.
+
 namespace grrt {
     /// @brief State representing a simple drone.
     class DroneState : public RobotState {
@@ -23,6 +27,7 @@ namespace grrt {
 
         PointCloudVoxel::SharedPtr getSweptVoxel(const RoadmapDart::SharedPtr& dart) override {
             return std::make_shared<PointCloudVoxel>();
+            // TODO: siddharth
         }
     };
 }  // namespace grrt

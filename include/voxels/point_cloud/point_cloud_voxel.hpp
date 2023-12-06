@@ -35,7 +35,8 @@ namespace grrt {
         typedef std::shared_ptr<PointCloudVoxelManager> SharedPtr;
 
         bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2) override {
-            // TODO
+            // will have to cast the volex to a PointCloudVoxel.
+            // TODO: siddharth
             return false;
         }
 
@@ -44,4 +45,8 @@ namespace grrt {
             return nullptr;
         }
     };
+
+    // for the gpu variants, it will call the cuda kernel.
+
+    // All the cuda kernal stuff needs to be in not hpp files.
 }  // namespace grrt
