@@ -22,6 +22,7 @@ namespace grrt {
         std::string toString() const override { return "DroneState: " + m_position.toString(); }
 
         Point getPosition() const { return m_position; }
+        float getRadius() const { return m_radius; }
 
        private:
         Point m_position;
@@ -40,28 +41,45 @@ namespace grrt {
             PointCloudVoxel::SharedPtr cloud = std::make_shared<PointCloudVoxel>();
 
             DroneState::SharedPtr start_state = std::dynamic_pointer_cast<DroneState>(dart->getStartState());
-
             DroneState::SharedPtr end_state = std::dynamic_pointer_cast<DroneState>(dart->getEndState());
 
             // generate fibonacci sphere: https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
             float phi = M_PI * (sqrt(5.) - 1.);  // golden angle in radian
 
-            float sweep_length = sqrt(pow(end_state->getPosition().x - start_state->getPosition().x, 2) +
-                                      pow(end_state->getPosition().y - start_state->getPosition().y, 2) +
-                                      pow(end_state->getPosition().z - start_state->getPosition().z, 2));
+            Point start_point = start_state->getPosition();
+            Point end_point = end_state->getPosition();
 
-            for (int i = 1; i <= VOXEL_POINTS_SAMPLING_SIZE; i++) {
-                float y = 1 - (i / float(VOXEL_POINTS_SAMPLING_SIZE - 1)) * 2;  // y goes from 1 to - 1
+            float sweep_length = sqrt(pow(end_point.x - start_point.x, 2) + pow(end_point.y - start_point.y, 2) +
+                                      pow(end_point.z - start_point.z, 2));
 
-                float radius = sqrt(1 - y * y);  // radius at y
-                float theta = phi * i;           // golden angle increment
+            float swept_distance = 0;
+            while (swept_distance < sweep_length) {
+                float a = swept_distance;
+                float b = sweep_length - swept_distance;
 
-                float x = cos(theta) * radius;
-                float z = sin(theta) * radius;
-                cloud->addPoint(Point(x, y, z));
+                float x_delta = a / (a + b) * (end_point.x - start_point.x);
+                float y_delta = a / (a + b) * (end_point.y - start_point.y);
+                float z_delta = a / (a + b) * (end_point.z - start_point.z);
+
+                Point offset = {start_point.x + x_delta, start_point.y + y_delta, start_point.z + z_delta};
+
+                for (int i = 1; i <= VOXEL_POINTS_SAMPLING_SIZE; i++) {
+                    float y = 1 - (i / float(VOXEL_POINTS_SAMPLING_SIZE - 1)) * 2;  // y goes from 1 to - 1
+
+                    float radius = sqrt(1 - y * y);  // radius at y
+                    float theta = phi * i;           // golden angle increment
+
+                    float x = cos(theta) * radius;
+                    float z = sin(theta) * radius;
+                    cloud->addPoint(Point(x * start_state->getRadius() + offset.x,
+                                          y * start_state->getRadius() + offset.y,
+                                          z * start_state->getRadius() + offset.z));
+                }
+
+                swept_distance += VOXEL_SWEEP_STEP_SIZE;
             }
 
-            // need to cast dart's RoadmapVertex's RobotState to DroneState to extract the x y z points
+            return cloud;
         }
     };
 
