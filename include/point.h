@@ -25,20 +25,24 @@ namespace grrt {
 
         inline Point operator-(const Point& other) const { return Point(x - other.x, y - other.y, z - other.z); }
 
-        inline Point operator*(const double& scalar) const { return Point(x * scalar, y * scalar, z * scalar); }
+        inline Point operator*(const float scalar) const { return Point(x * scalar, y * scalar, z * scalar); }
 
-        inline Point operator/(const double& scalar) const { return Point(x / scalar, y / scalar, z / scalar); }
+        inline Point operator/(const float scalar) const { return Point(x / scalar, y / scalar, z / scalar); }
 
-        inline double distance(const Point& other) const {
+        inline float distance(const Point& other) const {
             return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y) +
                              (z - other.z) * (z - other.z));
         }
 
-        inline double norm() const { return std::sqrt(x * x + y * y + z * z); }
+        inline float distance_squared(const Point& other) const {
+            return (x - other.x) * (x - other.x) + (y - other.y) * (y - other.y) + (z - other.z) * (z - other.z);
+        }
 
-        inline double dot(const Point& other) const { return x * other.x + y * other.y + z * other.z; }
+        inline float norm() const { return std::sqrt(x * x + y * y + z * z); }
 
-        inline double angle(const Point& other) const { return std::acos(dot(other) / (norm() * other.norm())); }
+        inline float dot(const Point& other) const { return x * other.x + y * other.y + z * other.z; }
+
+        inline float angle(const Point& other) const { return std::acos(dot(other) / (norm() * other.norm())); }
 
         std::string toString() const {
             return "Point(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")";

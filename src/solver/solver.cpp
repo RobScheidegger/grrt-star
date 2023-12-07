@@ -22,9 +22,11 @@ Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
 SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
                                const SearchVertex::SharedPtr& goal) const {
     // Start at the goal state, and trace back to the start state.
+    assert(start != nullptr);
+    assert(goal != nullptr);
     SolverResult result(true);
     SearchVertex::SharedPtr current = goal;
-    while (true) {
+    while (current != nullptr) {
         result.path.push_back(current);
         auto parent_dart = searchTree->getParentDart(current);
         if (parent_dart == nullptr) {
@@ -71,7 +73,7 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
                 break;
             auto end = std::chrono::high_resolution_clock::now();
             auto expand_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            spdlog::info("Expanded in {} ms", expand_time);
+            spdlog::info("Expanded in {} ms ({})", expand_time, T->size());
         }
 
         if (T->contains(problem.goal)) {
@@ -156,12 +158,13 @@ SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& ne
         // Check that the edge between the near vertex and new vertex is collision free.
         auto newDart = std::make_shared<SearchDart>(nearVertex, newVertex, 1);
         auto darts = m_searchGraph->getRoadmapDarts(nearVertex, newVertex);
-
+        spdlog::info("Checking dart {}", newDart->toString());
         auto start = std::chrono::high_resolution_clock::now();
         bool collisionFree = checkCollisionFreeDarts(darts);
         auto end = std::chrono::high_resolution_clock::now();
         auto collision_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        spdlog::info("Collision check took {} ms", collision_time);
+        spdlog::trace("Collision check took {} ms", collision_time);
+        spdlog::info("Checked dart {}", newDart->toString());
 
         if (collisionFree) {
             return newVertex;
@@ -174,8 +177,11 @@ SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& ne
 bool Solver::checkCollisionFreeDarts(const std::vector<RoadmapDart::SharedPtr> darts) const {
 
     bool collisionFree = true;
-    #pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < darts.size(); i++) {
+        if (!collisionFree) {
+            continue;
+        }
         for (int j = i + 1; j < darts.size(); j++) {
             if (m_voxelManager->intersect(darts[i]->voxel, darts[j]->voxel)) {
                 collisionFree = false;

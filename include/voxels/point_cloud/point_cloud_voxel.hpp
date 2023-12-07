@@ -42,7 +42,7 @@ namespace grrt {
 
             for (const Point& point_1 : pcl_voxel_1->m_points) {
                 for (const Point& point_2 : pcl_voxel_2->m_points) {
-                    if (point_1.distance(point_2) < PCL_VOXEL_RADIUS) {
+                    if (point_1.distance_squared(point_2) < PCL_VOXEL_RADIUS * PCL_VOXEL_RADIUS) {
                         return true;
                     }
                 }

@@ -433,12 +433,14 @@ SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName) {
 
 Result SolverConfigParser::printSolution(std::ostream& stream, const SolverConfig::SharedPtr& config,
                                          const SolverResult& solution) {
+    assert(config != nullptr);
     stream << solution.cost << std::endl;
     stream << solution.time << std::endl;
 
     // Print the path as a CSV line-by-line
     const auto num_robots = config->robots.size();
     for (const auto& state : solution.path) {
+        assert(state != nullptr);
         for (uint32_t i = 0; i < num_robots; i++) {
             stream << state->roadmapStates[i];
             if (i != num_robots - 1) {

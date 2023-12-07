@@ -12,6 +12,15 @@ namespace grrt {
 
         SearchVertex(const std::vector<RoadmapVertexId>& roadmapStates) : roadmapStates(roadmapStates) {}
 
+        inline std::string toString() const {
+            std::string str = "[";
+            for (const auto& roadmapState : roadmapStates) {
+                str += std::to_string(roadmapState) + ", ";
+            }
+            str += "]";
+            return str;
+        }
+
         const std::vector<RoadmapVertexId> roadmapStates;
     };
 

@@ -12,6 +12,8 @@ namespace grrt {
         SearchDart(const SearchVertex::SharedPtr& head, const SearchVertex::SharedPtr& tail, const double cost)
             : head(head), tail(tail), cost(cost) {}
 
+        inline std::string toString() const { return head->toString() + " -> " + tail->toString(); }
+
         const SearchVertex::SharedPtr head;
         const SearchVertex::SharedPtr tail;
         const double cost;
