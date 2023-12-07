@@ -1,13 +1,11 @@
 #pragma once
 
+#include "constants.h"
 #include "robots/robot.h"
 #include "voxels/point_cloud/point_cloud_voxel.hpp"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-
-#define VOXEL_SWEEP_STEP_SIZE 0.05
-#define VOXEL_POINTS_SAMPLING_SIZE 100
 
 namespace grrt {
     /// @brief State representing a simple drone.
@@ -24,7 +22,7 @@ namespace grrt {
             return position.distance(droneState->position);
         }
 
-        Point getPosition() const override { return position; }
+        inline Point getPosition() const override { return position; }
 
         Point position;
         float radius;

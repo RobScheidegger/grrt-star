@@ -13,6 +13,7 @@ find_package(rmw REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(rmw_fastrtps_cpp QUIET)
 find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
@@ -31,6 +32,7 @@ include_directories(SYSTEM
   /opt/ros/humble/include/message_filters
   /opt/ros/humble/include/sensor_msgs
   /opt/ros/humble/include/geometry_msgs
+  /opt/ros/humble/include/visualization_msgs
   /opt/ros/humble/include/tf2_geometry_msgs
   /opt/ros/humble/include/tf2
   /opt/ros/humble/include/tf2_ros
@@ -115,6 +117,7 @@ ament_target_dependencies(
   grrt_player
   rclcpp std_msgs
   sensor_msgs
+  visualization_msgs
   pcl_conversions
 )
 

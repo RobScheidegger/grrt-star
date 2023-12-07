@@ -4,6 +4,7 @@
 #include "pcl_conversions/pcl_conversions.h"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "visualization_msgs/msg/marker.hpp"
 
 #include "pkgs/cli11.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -25,6 +26,8 @@ class Publisher : public rclcpp::Node {
         : result(result), config(config), Node("point_cloud_publisher") {
         m_positionPublisher = this->create_publisher<PointCloud2>("positions", 10);
         m_voxelPublisher = this->create_publisher<PointCloud2>("voxels", 10);
+        m_edgePublisher = this->create_publisher<visualization_msgs::msg::Marker>("edges", 10);
+        m_vertexPublisher = this->create_publisher<visualization_msgs::msg::Marker>("vertices", 10);
     }
 
     std::vector<RoadmapDart::SharedPtr> getRoadmapDarts(const SearchVertex::SharedPtr& start,
@@ -70,6 +73,71 @@ class Publisher : public rclcpp::Node {
                 current_vertex = vertex;
             }
         }
+    }
+
+    void publishGraphEdges(const SolverConfig::SharedPtr& config) {
+        // Publish the graph edges as a line strip
+        auto msg = visualization_msgs::msg::Marker();
+        msg.header.frame_id = "map";
+        msg.header.stamp = this->now();
+        msg.ns = "graph";
+        msg.id = 0;
+        msg.type = visualization_msgs::msg::Marker::LINE_LIST;
+        msg.action = visualization_msgs::msg::Marker::ADD;
+        msg.pose.orientation.w = 1.0;
+        msg.scale.x = 0.1;
+        msg.color.b = 1.0;
+        msg.color.a = 1.0;
+
+        auto points_marker = visualization_msgs::msg::Marker();
+        points_marker.header.frame_id = "map";
+        points_marker.header.stamp = this->now();
+        points_marker.ns = "graph";
+        points_marker.id = 1;
+        points_marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+        points_marker.action = visualization_msgs::msg::Marker::ADD;
+        points_marker.pose.orientation.w = 1.0;
+        points_marker.scale.x = 0.5;
+        points_marker.scale.y = 0.5;
+        points_marker.scale.z = 0.5;
+        points_marker.color.r = 1.0;
+        points_marker.color.a = 1.0;
+
+        for (const auto& roadmap : config->roadmaps) {
+            for (const auto& dart : roadmap.second->darts) {
+                auto start_state = dart->getStartState();
+                auto end_state = dart->getEndState();
+
+                geometry_msgs::msg::Point start_point;
+                start_point.x = start_state->getPosition().x;
+                start_point.y = start_state->getPosition().y;
+                start_point.z = start_state->getPosition().z;
+
+                geometry_msgs::msg::Point end_point;
+                end_point.x = end_state->getPosition().x;
+                end_point.y = end_state->getPosition().y;
+                end_point.z = end_state->getPosition().z;
+
+                spdlog::debug("Publishing edge from {} ({}) to {} ({})", start_state->getId(),
+                              start_state->getPosition().toString(), end_state->getId(),
+                              start_state->getPosition().toString());
+
+                msg.points.push_back(start_point);
+                msg.points.push_back(end_point);
+            }
+
+            for (const auto& vertex : roadmap.second->vertices) {
+                geometry_msgs::msg::Point point;
+                point.x = vertex->getState()->getPosition().x;
+                point.y = vertex->getState()->getPosition().y;
+                point.z = vertex->getState()->getPosition().z;
+
+                points_marker.points.push_back(point);
+            }
+        }
+
+        m_edgePublisher->publish(msg);
+        m_vertexPublisher->publish(points_marker);
     }
 
     void publishPositions(const std::vector<RoadmapDart::SharedPtr>& darts, bool publish_once = false) {
@@ -138,7 +206,7 @@ class Publisher : public rclcpp::Node {
             }
 
             PointCloudVoxel::SharedPtr cloud = std::dynamic_pointer_cast<PointCloudVoxel>(voxel);
-            spdlog::info("Publishing voxel for robot {} with {} points", i, cloud->m_points.size());
+            spdlog::debug("Publishing voxel for robot {} with {} points", i, cloud->m_points.size());
 
             pcl_msg->width += cloud->m_points.size();
             pcl_msg->points.reserve(cloud->m_points.size());
@@ -153,7 +221,7 @@ class Publisher : public rclcpp::Node {
         pcl::toROSMsg(*pcl_msg, msg);
         msg.header.frame_id = "map";
         msg.header.stamp = this->now();
-        spdlog::info("Publishing voxel with {}, {} points", msg.data.size(), pcl_msg->points.size());
+        spdlog::debug("Publishing voxel with {}, {} points", msg.data.size(), pcl_msg->points.size());
         m_voxelPublisher->publish(msg);
     }
 
@@ -161,6 +229,8 @@ class Publisher : public rclcpp::Node {
     const SolverConfig::SharedPtr config;
     rclcpp::Publisher<PointCloud2>::SharedPtr m_voxelPublisher;
     rclcpp::Publisher<PointCloud2>::SharedPtr m_positionPublisher;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr m_edgePublisher;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr m_vertexPublisher;
 };
 
 struct SolverCLIOptions {
@@ -211,6 +281,13 @@ int main(int argc, char** argv) {
     Result result = SolverConfigParser::parseSolution(options.solution_file, solution);
 
     std::shared_ptr<Publisher> publisher = std::make_shared<Publisher>(solution, config);
+
+    auto thread = std::thread([&]() {
+        while (true) {
+            publisher->publishGraphEdges(config);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        }
+    });
 
     if (options.voxel != 0) {
         spdlog::info("Visualizing voxel {}", options.voxel);

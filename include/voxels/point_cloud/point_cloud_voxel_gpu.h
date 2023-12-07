@@ -3,11 +3,10 @@
 #include <cuda.h>
 #include <vector>
 
+#include "constants.h"
 #include "point.h"
 #include "voxels/voxel.h"
 #include "voxels/voxel_manager.h"
-
-#define PCL_VOXEL_RADIUS 0.1
 
 namespace grrt {
 

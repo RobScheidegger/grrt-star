@@ -10,11 +10,10 @@
 
 using namespace grrt;
 
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-
 struct SolverCLIOptions {
     std::string configuration_file = "";
     bool useMPI = false;
+    size_t timeoutSeconds = 10;
 };
 
 int main(int argc, char** argv) {
@@ -24,6 +23,7 @@ int main(int argc, char** argv) {
 
     app.add_option("-c,--config", options.configuration_file, "Configuration file path");
     app.add_option("-m,--mpi", options.useMPI, "Use MPI");
+    app.add_option("-t,--timeout", options.timeoutSeconds, "Timeout in seconds");
 
     CLI11_PARSE(app, argc, argv);
 
