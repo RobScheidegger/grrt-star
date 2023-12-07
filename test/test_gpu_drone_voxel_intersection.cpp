@@ -32,6 +32,33 @@ TEST(PointCloudVoxelsGPU, TestHeadOnCollision) {
     EXPECT_TRUE(voxel_manager->intersect(voxel1, voxel2));
 }
 
+TEST(PointCloudVoxelsGPU, TestBarelyCollision) {
+    //
+    // Checks that two voxels that barely intersect each other actually intersect
+    //
+    const float ROBOT_RADIUS = 1.0;
+
+    RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
+    Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
+    auto v1_left = roadmap->addVertex("v1_left", std::make_shared<DroneGPUState>(Point(0, 0, 2), ROBOT_RADIUS));
+    auto v1_right = roadmap->addVertex("v1_right", std::make_shared<DroneGPUState>(Point(0, 0, 1), ROBOT_RADIUS));
+    // essentially 2.1
+    auto v2_left = roadmap->addVertex("v2_left", std::make_shared<DroneGPUState>(Point(0, 0, -1), ROBOT_RADIUS));
+    auto v2_right = roadmap->addVertex("v2_right", std::make_shared<DroneGPUState>(Point(0, 0, -1), ROBOT_RADIUS));
+
+    auto d1 = roadmap->addDart(v1_left, v1_right);
+    auto d2 = roadmap->addDart(v2_left, v2_right);
+
+    DroneGPU drone1(1, "Drone 1", roadmap);
+    DroneGPU drone2(2, "Drone 2", roadmap);
+
+    auto voxel1 = drone1.getSweptVoxel(d1);
+    auto voxel2 = drone2.getSweptVoxel(d2);
+
+    VoxelManager::SharedPtr voxel_manager = factory->makeVoxelManager();
+    EXPECT_TRUE(voxel_manager->intersect(voxel1, voxel2));
+}
+
 TEST(PointCloudVoxelsGPU, TestParallelNearbySameRoadmap) {
     //
     // Checks that two voxels that are parallel but nearby do not intersect

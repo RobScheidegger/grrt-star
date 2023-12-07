@@ -56,9 +56,9 @@ namespace grrt {
                 float a = swept_distance;
                 float b = sweep_length - swept_distance;
 
-                float x_delta = a / (a + b) * (end_point.x - start_point.x);
-                float y_delta = a / (a + b) * (end_point.y - start_point.y);
-                float z_delta = a / (a + b) * (end_point.z - start_point.z);
+                float x_delta = ((a + b) != 0) ? a / (a + b) * (end_point.x - start_point.x) : 0;
+                float y_delta = ((a + b) != 0) ? a / (a + b) * (end_point.y - start_point.y) : 0;
+                float z_delta = ((a + b) != 0) ? a / (a + b) * (end_point.z - start_point.z) : 0;
 
                 Point offset = {start_point.x + x_delta, start_point.y + y_delta, start_point.z + z_delta};
 
