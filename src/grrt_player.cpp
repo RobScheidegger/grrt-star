@@ -16,7 +16,7 @@
 using namespace grrt;
 using namespace sensor_msgs::msg;
 
-#define DRONE_SPEED 1.0
+#define DRONE_SPEED 5.0
 #define VOXEL_PUBLISH_HZ 10
 
 class Publisher : public rclcpp::Node {

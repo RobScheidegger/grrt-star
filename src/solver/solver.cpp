@@ -27,7 +27,9 @@ SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const Se
     while (true) {
         result.path.push_back(current);
         auto parent_dart = searchTree->getParentDart(current);
-        if (parent_dart == nullptr) { break; }
+        if (parent_dart == nullptr) {
+            break;
+        }
 
         result.cost += parent_dart->cost;
         current = parent_dart->head;
@@ -35,7 +37,7 @@ SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const Se
     return result;
 }
 
-void Solver::expand(SearchTree::SharedPtr& searchTree) {
+bool Solver::expand(SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& goal) {
     // Sample a random vertex.
     SearchVertex::SharedPtr q_rand = m_searchGraph->getRandomVertex();
 
@@ -48,7 +50,13 @@ void Solver::expand(SearchTree::SharedPtr& searchTree) {
     // Add x_new to the search tree.
     if (v_new != nullptr && !searchTree->contains(v_new)) {
         searchTree->addVertex(v_new, std::make_shared<SearchDart>(v_near, v_new, 1));
+
+        if (v_new == goal) {
+            return true;
+        }
     }
+
+    return false;
 }
 
 SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
@@ -58,7 +66,8 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
 
     while (!cancellationToken) {
         for (uint32_t i = 0; i < num_iterations; i++) {
-            expand(T);
+            if (expand(T, problem.goal))
+                break;
         }
 
         if (T->contains(problem.goal)) {
@@ -67,7 +76,15 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
         }
     }
 
-    return SolverResult::fail();
+    auto result = SolverResult::fail();
+    // We failed, but find the closest node and output the path
+    auto nearest = T->getNearestPoint(problem.goal);
+    if (nearest != nullptr) {
+        result = tracePath(T, problem.start, nearest);
+        result.success = false;
+        return result;
+    }
+    return result;
 }
 
 SolverSolutions Solver::solve() {

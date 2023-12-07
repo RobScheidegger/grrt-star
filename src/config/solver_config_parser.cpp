@@ -76,7 +76,7 @@ static Result parseDroneState(const ryml::ConstNodeRef& node, RobotState::Shared
         return res;
     }
 
-    config = std::make_shared<DroneState>(Point(x, y, z), 0.5f);
+    config = std::make_shared<DroneState>(Point(x, y, z), 1);
 
     return Result::Ok();
 }
@@ -185,10 +185,6 @@ Result parseRoadmaps(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
             } else {
                 // Add edges to all other vertices
                 for (auto other_vertex : roadmap_ptr->vertices) {
-                    if (other_vertex == vertex) {
-                        continue;
-                    }
-
                     roadmap_ptr->addDart(vertex, other_vertex);
                 }
             }
