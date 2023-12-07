@@ -75,6 +75,8 @@ namespace grrt {
                 }
             }
 
+            dart->voxel = cloud;
+
             return cloud;
         }
 

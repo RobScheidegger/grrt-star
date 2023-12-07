@@ -30,10 +30,13 @@ namespace grrt {
        private:
         const SolverConfig::SharedPtr m_config;
         SearchGraph::SharedPtr m_searchGraph;
+        VoxelManager::SharedPtr m_voxelManager;
 
         SolverResult solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken);
 
         void expand(SearchTree::SharedPtr& searchTree);
+
+        void computeVoxels();
 
         SolverResult tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
                                const SearchVertex::SharedPtr& goal) const;

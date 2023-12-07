@@ -29,6 +29,7 @@ RoadmapDart::SharedPtr Roadmap::addDart(const RoadmapVertex::SharedPtr& v1, cons
 void Roadmap::computeAllPairsShortestPath() {
     this->distances = std::vector<std::vector<double>>(
         vertices.size(), std::vector<double>(vertices.size(), std::numeric_limits<double>::infinity()));
+
     for (auto& vertex : vertices) {
         dijkstra(vertex);
     }

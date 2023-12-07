@@ -5,6 +5,7 @@
 #include "graphs/search_vertex.h"
 #include "pkgs/rapidyaml.hpp"
 
+#include <unordered_set>
 
 using namespace grrt;
 
@@ -15,6 +16,7 @@ Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
         roadmaps.push_back(robot->roadmap);
     }
     m_searchGraph = std::make_shared<SearchGraph>(roadmaps);
+    m_voxelManager = config->robotFactory->makeVoxelManager();
 }
 
 SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
@@ -52,14 +54,6 @@ void Solver::expand(SearchTree::SharedPtr& searchTree) {
 SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
     SearchTree::SharedPtr T = std::make_shared<SearchTree>(m_searchGraph, problem.start);
 
-    // compute shortest paths over all roadmaps
-    std::cout << "test" << std::endl;
-    spdlog::info("Start computing shortest paths");
-    for (const auto& roadmap : m_searchGraph->roadmaps) {
-        roadmap->computeAllPairsShortestPath();
-    }
-    spdlog::info("Finished computing shortest paths");
-
     const int num_iterations = 100;
 
     while (!cancellationToken) {
@@ -78,23 +72,38 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
 
 SolverSolutions Solver::solve() {
 
-    std::atomic_bool cancellationToken(false);
-
     SolverSolutions solutions = std::make_unique<std::unordered_map<std::string, SolverResult>>();
+    this->computeVoxels();
+    for (const auto& roadmap : m_searchGraph->roadmaps) {
+        roadmap->computeAllPairsShortestPath();
+    }
 
     // set cancellation token to true in 10 seconds
-    std::thread([&cancellationToken]() {
-        std::this_thread::sleep_for(std::chrono::seconds(10));
-        cancellationToken = true;
-    }).detach();
-
     for (const auto& problem : m_config->problems) {
+        std::atomic_bool cancellationToken(false);
+        std::thread([&cancellationToken]() {
+            std::this_thread::sleep_for(std::chrono::seconds(10));
+            cancellationToken = true;
+        }).detach();
 
         auto result = solveProblem(problem, cancellationToken);
         solutions->insert(std::make_pair(problem.name, result));
     }
 
     return solutions;
+}
+
+void Solver::computeVoxels() {
+    // make a set of roadmaps
+    std::unordered_set<Roadmap::SharedPtr> roadmaps;
+    for (auto& robot : m_config->robots) {
+        if (!roadmaps.count(robot->roadmap)) {
+            for (auto& dart : robot->roadmap->darts) {
+                robot->getSweptVoxel(dart);
+            }
+        }
+        roadmaps.insert(robot->roadmap);
+    }
 }
 
 SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& nearVertex,
