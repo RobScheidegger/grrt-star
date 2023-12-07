@@ -16,6 +16,7 @@ Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
         roadmaps.push_back(robot->roadmap);
     }
     m_searchGraph = std::make_shared<SearchGraph>(roadmaps);
+    m_voxelManager = config->robotFactory->makeVoxelManager();
 }
 
 SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
