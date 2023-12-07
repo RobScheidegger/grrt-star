@@ -17,6 +17,8 @@ namespace grrt {
 
         PointCloudVoxelGPU(const size_t num_points);
 
+        ~PointCloudVoxelGPU();
+
         /// @brief Gets the radius of each point in the point cloud, in meters.
         inline float getRadius() const { return m_radius; }
 
@@ -24,18 +26,12 @@ namespace grrt {
 
         bool contains(const Point& point) const override;
 
-        ~PointCloudVoxelGPU(){
-            cudaError_t err = cudaFree(points);
-            if (err != cudaSuccess) {
-                throw std::runtime_error("Failed to free points memory for point cloud voxel gpu");
-            }
-        }
+        const size_t num_points = 0;
+        float* points = nullptr;
 
        private:
         const float m_radius = PCL_VOXEL_RADIUS;
 
-        float* points = nullptr;
-        const size_t num_points = 0;
         size_t current_num_points = 0;
     };
 
@@ -43,11 +39,8 @@ namespace grrt {
        public:
         typedef std::shared_ptr<PointCloudVoxelGPUManager> SharedPtr;
 
-        bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2) override {
-            // will have to cast the vortex to a PointCloudVoxelGPU.
-            // TODO: siddharth
-            return false;
-        }
+        // defined in cu file.
+        bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2) override;
 
         Voxel::SharedPtr optimize(Voxel::SharedPtr& voxel) override {
             // TODO
