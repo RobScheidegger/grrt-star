@@ -6,6 +6,7 @@
 using namespace grrt;
 
 RoadmapVertex::SharedPtr Roadmap::addVertex(const std::string& name, const RobotState::SharedPtr& state) {
+
     auto vertex = std::make_shared<RoadmapVertex>(vertices.size(), state);
     vertices.push_back(vertex);
     m_verticesByName[name] = vertex;
