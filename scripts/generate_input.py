@@ -6,6 +6,7 @@ import argparse
 import os
 import yaml
 import math
+import random
 
 argparser = argparse.ArgumentParser(
     description="Generate input YAML files for the solver."
@@ -17,6 +18,13 @@ argparser.add_argument(
     type=str,
     help="Output file name.",
     required=True,
+)
+
+argparser.add_argument(
+    "--random",
+    type=bool,
+    help="Whether to generate a random graph.",
+    required=False,
 )
 
 argparser.add_argument(
@@ -60,6 +68,13 @@ if args.type == "circle_rotate":
             0,
         )
         for i in range(args.n)
+    ] + [
+        (
+            args.radius * math.cos(2 * math.pi * i / args.n),
+            args.radius * math.sin(2 * math.pi * i / args.n),
+            2,
+        )
+        for i in range(args.n)
     ]
 
     start_positions = {
@@ -87,7 +102,7 @@ if args.type == "circle_rotate":
                         "y": circle_positions[i][1],
                         "z": circle_positions[i][2],
                     }
-                    for i in range(args.n)
+                    for i in range(2 * args.n)
                 ],
             }
         ],
@@ -96,10 +111,20 @@ if args.type == "circle_rotate":
         ],
     }
     if args.solution:
-        solution = "0\n0\n"
-        solution += ",".join([str(i) for i in range(args.n)])
-        solution += "\n"
-        solution += ",".join([str((i + 1) % args.n) for i in range(args.n)])
+        if args.random:
+            # Generate a random permutation of the nodes
+
+            order = list(range(2 * args.n))
+            solution = "0\n0\n"
+            for _ in range(7):
+                solution += ",".join([str(i) for i in order])
+                solution += "\n"
+                random.shuffle(order)
+        else:
+            solution = "0\n0\n"
+            solution += ",".join([str(i) for i in range(args.n)])
+            solution += "\n"
+            solution += ",".join([str((i + 1) % args.n) for i in range(args.n)])
 
 # Write contents to a YAML file
 

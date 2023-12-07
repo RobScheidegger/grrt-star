@@ -185,10 +185,6 @@ Result parseRoadmaps(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
             } else {
                 // Add edges to all other vertices
                 for (auto other_vertex : roadmap_ptr->vertices) {
-                    if (other_vertex == vertex) {
-                        continue;
-                    }
-
                     roadmap_ptr->addDart(vertex, other_vertex);
                 }
             }
