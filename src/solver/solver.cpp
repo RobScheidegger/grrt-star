@@ -49,7 +49,6 @@ bool Solver::expand(SearchTree::SharedPtr& searchTree, const SearchVertex::Share
 
     // Add x_new to the search tree.
     if (v_new != nullptr && !searchTree->contains(v_new)) {
-        std::cout << "adding a vertex to the tree" << std::endl;
         searchTree->addVertex(v_new, std::make_shared<SearchDart>(v_near, v_new, 1));
 
         if (v_new == goal) {
