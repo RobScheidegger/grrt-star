@@ -72,22 +72,19 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
 
 SolverSolutions Solver::solve() {
 
-    std::atomic_bool cancellationToken(false);
-
     SolverSolutions solutions = std::make_unique<std::unordered_map<std::string, SolverResult>>();
-
+    this->computeVoxels();
     for (const auto& roadmap : m_searchGraph->roadmaps) {
         roadmap->computeAllPairsShortestPath();
     }
-    this->computeVoxels();
 
     // set cancellation token to true in 10 seconds
-    std::thread([&cancellationToken]() {
-        std::this_thread::sleep_for(std::chrono::seconds(10));
-        cancellationToken = true;
-    }).detach();
-
     for (const auto& problem : m_config->problems) {
+        std::atomic_bool cancellationToken(false);
+        std::thread([&cancellationToken]() {
+            std::this_thread::sleep_for(std::chrono::seconds(10));
+            cancellationToken = true;
+        }).detach();
 
         auto result = solveProblem(problem, cancellationToken);
         solutions->insert(std::make_pair(problem.name, result));
