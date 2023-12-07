@@ -24,11 +24,11 @@ namespace grrt {
 
         bool contains(const Point& point) const override;
 
-        ~PointCloudVoxelGPU(){
-            cudaError_t err = cudaFree(points);
-            if (err != cudaSuccess) {
-                throw std::runtime_error("Failed to free points memory for point cloud voxel gpu");
-            }
+        ~PointCloudVoxelGPU() {
+            // cudaError_t err = cudaFree(points);
+            // if (err != cudaSuccess) {
+            //     throw std::runtime_error("Failed to free points memory for point cloud voxel gpu");
+            // }
         }
 
        private:

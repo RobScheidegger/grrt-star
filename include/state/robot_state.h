@@ -5,6 +5,8 @@
 #include <string>
 #include <type_traits>
 
+#include "point.h"
+
 namespace grrt {
     /// @brief Type definition for a an Id for a roadmap state.
     typedef uint64_t RoadmapStateId;
@@ -19,6 +21,8 @@ namespace grrt {
         virtual std::string toString() const = 0;
 
         virtual double distance(const RobotState::SharedPtr& other) const = 0;
+
+        virtual Point getPosition() const = 0;
 
         /// @brief Construct a new Robot State object
         void setId(const RoadmapStateId id) { m_id = id; }
