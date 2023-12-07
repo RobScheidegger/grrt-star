@@ -6,5 +6,5 @@ docker run -it --rm \
  -v $HOME/.Xauthority:/root/.Xauthority \
  --privileged \
  --net=host \
- -v $(pwd):/workplace \
+ -v "$(pwd)":/workplace \
  grrt_container bash
