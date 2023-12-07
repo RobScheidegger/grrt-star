@@ -93,10 +93,15 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
 SolverSolutions Solver::solve() {
 
     SolverSolutions solutions = std::make_unique<std::unordered_map<std::string, SolverResult>>();
+
+    auto start = std::chrono::high_resolution_clock::now();
     this->computeVoxels();
     for (const auto& roadmap : m_searchGraph->roadmaps) {
         roadmap->computeAllPairsShortestPath();
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto preprocess_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    spdlog::info("Preprocessing took {} ms", preprocess_time);
 
     // set cancellation token to true in 10 seconds
     for (const auto& problem : m_config->problems) {
@@ -167,12 +172,16 @@ SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& ne
 };
 
 bool Solver::checkCollisionFreeDarts(const std::vector<RoadmapDart::SharedPtr> darts) const {
+
+    bool collisionFree = true;
+    #pragma omp parallel for
     for (int i = 0; i < darts.size(); i++) {
         for (int j = i + 1; j < darts.size(); j++) {
             if (m_voxelManager->intersect(darts[i]->voxel, darts[j]->voxel)) {
-                return false;
+                collisionFree = false;
             }
         }
     }
-    return true;
+
+    return collisionFree;
 };

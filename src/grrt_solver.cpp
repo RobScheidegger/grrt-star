@@ -10,8 +10,6 @@
 
 using namespace grrt;
 
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-
 struct SolverCLIOptions {
     std::string configuration_file = "";
     bool useMPI = false;
