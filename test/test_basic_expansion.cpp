@@ -44,6 +44,7 @@ TEST(SolverExpansion, TestBasicRRTExpansion1) {
     config->robots.push_back(std::make_shared<Drone>(1, "Drone 1", roadmap));
     config->robots.push_back(std::make_shared<Drone>(2, "Drone 2", roadmap));
     config->problems.push_back(SolverProblem("Test Drone Roadmap", start_vertex, end_vertex));
+    config->robotFactory = factory;
 
     Solver solver = Solver(config);
     auto solutions = solver.solve();
@@ -54,19 +55,24 @@ TEST(SolverExpansion, TestBasicRRTExpansion1) {
 TEST(SolverExpansion, TestBasicRRTExpansion2) {
     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD);
     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
-    auto v1 = roadmap->addVertex("v1", std::make_shared<DroneState>(Point(-1, 0, 0), 1.0));
-    auto v2 = roadmap->addVertex("v2", std::make_shared<DroneState>(Point(1, 0, 0), 1.0));
-    auto v3 = roadmap->addVertex("v3", std::make_shared<DroneState>(Point(0, 1, 0), 1.0));
+    auto left      = roadmap->addVertex("v1", std::make_shared<DroneState>(Point(-10, 0, 0), 1.0));
+    auto right     = roadmap->addVertex("v2", std::make_shared<DroneState>(Point(10, 0, 0), 1.0));
+    auto top       = roadmap->addVertex("v3", std::make_shared<DroneState>(Point(0, 10, 0), 1.0));
+    auto top_right = roadmap->addVertex("v4", std::make_shared<DroneState>(Point(5, 5, 0), 1.0));
+    auto top_left  = roadmap->addVertex("v4", std::make_shared<DroneState>(Point(-5, 5, 0), 1.0));
+    auto origin    = roadmap->addVertex("v4", std::make_shared<DroneState>(Point(0, 0, 0), 1.0));
 
-    auto start_vertex = std::make_shared<SearchVertex>(std::vector{v1->m_id, v2->m_id});
-    auto end_vertex = std::make_shared<SearchVertex>(std::vector{v2->m_id, v1->m_id});
+    auto start_vertex = std::make_shared<SearchVertex>(std::vector{left->m_id, right->m_id});
+    auto end_vertex = std::make_shared<SearchVertex>(std::vector{right->m_id, left->m_id});
 
-    auto d1 = roadmap->addDart(v1, v2);
-    auto d2 = roadmap->addDart(v2, v1);
-    auto d3 = roadmap->addDart(v2, v3);
-    auto d4 = roadmap->addDart(v3, v2);
-    auto d5 = roadmap->addDart(v1, v3);
-    auto d6 = roadmap->addDart(v3, v1);
+    roadmap->addDart(left, top_left);
+    roadmap->addDart(top_left, top);
+    roadmap->addDart(top, top_right);
+    roadmap->addDart(top_right, right);
+    roadmap->addDart(right, origin);
+    roadmap->addDart(origin, right);
+    roadmap->addDart(left, origin);
+    roadmap->addDart(origin, left);
 
     Drone drone1(1, "Drone 1", roadmap);
     Drone drone2(2, "Drone 2", roadmap);
@@ -76,6 +82,7 @@ TEST(SolverExpansion, TestBasicRRTExpansion2) {
     config->robots.push_back(std::make_shared<Drone>(1, "Drone 1", roadmap));
     config->robots.push_back(std::make_shared<Drone>(2, "Drone 2", roadmap));
     config->problems.push_back(SolverProblem("Test Drone Roadmap", start_vertex, end_vertex));
+    config->robotFactory = factory;
 
     Solver solver = Solver(config);
     auto solutions = solver.solve();

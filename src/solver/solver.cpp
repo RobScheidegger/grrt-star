@@ -47,6 +47,7 @@ void Solver::expand(SearchTree::SharedPtr& searchTree) {
 
     // Add x_new to the search tree.
     if (v_new != nullptr && !searchTree->contains(v_new)) {
+        std::cout << "adding a vertex to the tree" << std::endl;
         searchTree->addVertex(v_new, std::make_shared<SearchDart>(v_near, v_new, 1));
     }
 }
@@ -54,7 +55,7 @@ void Solver::expand(SearchTree::SharedPtr& searchTree) {
 SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
     SearchTree::SharedPtr T = std::make_shared<SearchTree>(m_searchGraph, problem.start);
 
-    const int num_iterations = 100;
+    const int num_iterations = 10;
 
     while (!cancellationToken) {
         for (uint32_t i = 0; i < num_iterations; i++) {
@@ -106,12 +107,41 @@ void Solver::computeVoxels() {
     }
 }
 
+#define ORACLE_VERTEX_ATTEMPTS 10
+
 SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& nearVertex,
                                                const SearchVertex::SharedPtr& randomVertex) const {
 
     // Find the vertex in the graph that minimizes the angle between nearVertex and randomVertex.
     // This is the vertex that is closest to randomVertex in the graph.
 
-    // TODO:
-    return m_searchGraph->sampleAdjacentVertex(nearVertex);
+    size_t attempts = 0;
+    while (attempts++ < ORACLE_VERTEX_ATTEMPTS) {
+        auto newVertex = m_searchGraph->sampleAdjacentVertex(nearVertex);
+        if (newVertex == nullptr) {
+            // Help
+            spdlog::warn("sampleAdjacentVertex returned nullptr");
+            continue;
+        }
+
+        // Check that the edge between the near vertex and new vertex is collision free.
+        auto newDart = std::make_shared<SearchDart>(nearVertex, newVertex, 1);
+        auto darts = m_searchGraph->getRoadmapDarts(nearVertex, newVertex);
+        if (checkCollisionFreeDarts(darts)) {
+            return newVertex;
+        }
+    }
+
+    return nullptr;
+};
+
+bool Solver::checkCollisionFreeDarts(const std::vector<RoadmapDart::SharedPtr> darts) const {
+    for (int i = 0; i < darts.size(); i++) {
+        for (int j = i + 1; j < darts.size(); j++) {
+            if (m_voxelManager->intersect(darts[i]->voxel, darts[j]->voxel)) {
+                return false;
+            }
+        }
+    }
+    return true;
 };

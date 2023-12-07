@@ -40,5 +40,7 @@ namespace grrt {
 
         SolverResult tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
                                const SearchVertex::SharedPtr& goal) const;
+
+        bool checkCollisionFreeDarts(const std::vector<RoadmapDart::SharedPtr> darts) const;
     };
 }  // namespace grrt
