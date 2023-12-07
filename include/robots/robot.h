@@ -10,6 +10,8 @@ namespace grrt {
     /// @brief A unique ID for a robot.
     typedef uint64_t RobotId;
 
+    class Roadmap;
+
     /// @brief Generic robot interface to represent a single robot in a scene.
     class IRobot {
        public:
@@ -17,9 +19,9 @@ namespace grrt {
 
         std::string name;
         RobotId id;
-        Roadmap::SharedPtr roadmap;
+        std::shared_ptr<Roadmap> roadmap;
 
-        IRobot(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap)
+        IRobot(const RobotId id, const std::string& name, const std::shared_ptr<Roadmap>& roadmap)
             : name(name), id(id), roadmap(roadmap) {}
 
         /// @brief Gets the swept voxel region for a given roadmap edge.

@@ -35,6 +35,8 @@ namespace grrt {
 
         void expand(SearchTree::SharedPtr& searchTree);
 
+        void computeVoxels();
+
         SolverResult tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
                                const SearchVertex::SharedPtr& goal) const;
     };

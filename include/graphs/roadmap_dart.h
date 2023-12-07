@@ -28,8 +28,6 @@ namespace grrt {
             return m_start->getState()->toString() + " -> " + m_end->getState()->toString();
         }
 
-        void setVoxel(const Voxel::SharedPtr& voxel) { m_voxel = voxel; }
-
         RobotState::SharedPtr getStartState() const { return m_start->getState(); }
 
         RobotState::SharedPtr getEndState() const { return m_end->getState(); }
@@ -39,11 +37,13 @@ namespace grrt {
         const RoadmapVertex::SharedPtr m_start;
 
         const RoadmapVertex::SharedPtr m_end;
+
         const double cost;
+
+        Voxel::SharedPtr voxel = nullptr;
 
        private:
         const RoadmapDartId m_id;
 
-        Voxel::SharedPtr m_voxel = nullptr;
     };
 }  // namespace grrt
