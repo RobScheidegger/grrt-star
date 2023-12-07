@@ -78,6 +78,8 @@ namespace grrt {
             printf("thing: %d\n", thing);
             printf("cloud_point_size: %d\n", cloud_point_size);
 
+            dart->voxel = cloud;
+
             return cloud;
         }
 
