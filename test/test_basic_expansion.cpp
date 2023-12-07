@@ -25,7 +25,7 @@ TEST(SolverExpansion, TestBasicRRTExpansion1) {
     auto v2 = roadmap->addVertex("v2", std::make_shared<DroneState>(Point(1, 0, 0), 1.0));
 
     auto start_vertex = std::make_shared<SearchVertex>(std::vector{v1->m_id, v2->m_id});
-    auto end_vertex = std::make_shared<SearchVertex>(std::vector{v1->m_id, v2->m_id});
+    auto end_vertex = std::make_shared<SearchVertex>(std::vector{v2->m_id, v1->m_id});
 
     auto d1 = roadmap->addDart(v1, v2);
     auto d2 = roadmap->addDart(v2, v1);
@@ -59,7 +59,7 @@ TEST(SolverExpansion, TestBasicRRTExpansion2) {
     auto v3 = roadmap->addVertex("v3", std::make_shared<DroneState>(Point(0, 1, 0), 1.0));
 
     auto start_vertex = std::make_shared<SearchVertex>(std::vector{v1->m_id, v2->m_id});
-    auto end_vertex = std::make_shared<SearchVertex>(std::vector{v1->m_id, v2->m_id});
+    auto end_vertex = std::make_shared<SearchVertex>(std::vector{v2->m_id, v1->m_id});
 
     auto d1 = roadmap->addDart(v1, v2);
     auto d2 = roadmap->addDart(v2, v1);

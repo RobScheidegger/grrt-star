@@ -11,8 +11,8 @@ using namespace grrt;
 Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
     // Initialize the search graph (generic, will be shared between all problems)
     std::vector<Roadmap::SharedPtr> roadmaps;
-    for (const auto& pair : m_config->roadmaps) {
-        roadmaps.push_back(pair.second);
+    for (const auto& robot : m_config->robots) {
+        roadmaps.push_back(robot->roadmap);
     }
     m_searchGraph = std::make_shared<SearchGraph>(roadmaps);
 }
@@ -22,15 +22,14 @@ SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const Se
     // Start at the goal state, and trace back to the start state.
     SolverResult result(true);
     SearchVertex::SharedPtr current = goal;
-    while (current != nullptr) {
+    while (true) {
         result.path.push_back(current);
         auto parent_dart = searchTree->getParentDart(current);
-        if (parent_dart != nullptr) {
-            result.cost += parent_dart->cost;
-        }
+        if (parent_dart == nullptr) { break; }
+
+        result.cost += parent_dart->cost;
         current = parent_dart->head;
     }
-
     return result;
 }
 
@@ -63,14 +62,13 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
 
     const int num_iterations = 100;
 
-    int iterations = 0;
     while (!cancellationToken) {
-        spdlog::info("Iteration {}", iterations);
         for (uint32_t i = 0; i < num_iterations; i++) {
             expand(T);
         }
 
         if (T->contains(problem.goal)) {
+            auto result = tracePath(T, problem.start, problem.goal);
             return tracePath(T, problem.start, problem.goal);
         }
     }
