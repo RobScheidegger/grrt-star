@@ -50,10 +50,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+# add optimization flags like -O3 to str below
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
 # Configure all of the library
+
+# cmake -DCMAKE_BUILD_TYPE=Debug .
 
 if(NOT TARGET spdlog)
     # Stand-alone build
@@ -127,8 +130,10 @@ enable_testing()
 
 add_executable(grrt_tests
   test/test_basic_drone_voxel_intersection.cpp
+  test/test_gpu_drone_voxel_intersection.cpp
   test/test_basic_all_pairs_shortest_path.cpp
   test/test_basic_expansion.cpp
+  test/test_gpu_expansion.cpp
 )
 
 target_link_libraries(grrt_tests

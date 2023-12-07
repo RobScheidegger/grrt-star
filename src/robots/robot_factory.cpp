@@ -43,6 +43,8 @@ VoxelManager::SharedPtr RobotFactory::makeVoxelManager() const {
     switch (m_voxelType) {
         case VoxelType::POINT_CLOUD:
             return std::make_shared<PointCloudVoxelManager>();
+        case VoxelType::POINT_CLOUD_GPU:
+            return std::make_shared<PointCloudVoxelGPUManager>();
         default:
             throw std::runtime_error("Unknown voxel type");
     }
