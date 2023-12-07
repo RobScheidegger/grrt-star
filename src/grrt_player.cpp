@@ -114,8 +114,8 @@ class Publisher : public rclcpp::Node {
                 break;
             }
 
-            t += 0.1;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            t += 0.05;
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     }
 
@@ -132,7 +132,11 @@ class Publisher : public rclcpp::Node {
             auto roadmap = config->robots[i]->roadmap;
             auto dart = darts[i];
 
-            auto voxel = config->robots[i]->getSweptVoxel(dart);
+            auto voxel = dart->voxel;
+            if (voxel == nullptr) {
+                voxel = config->robots[i]->getSweptVoxel(dart);
+            }
+
             PointCloudVoxel::SharedPtr cloud = std::dynamic_pointer_cast<PointCloudVoxel>(voxel);
             spdlog::info("Publishing voxel for robot {} with {} points", i, cloud->m_points.size());
 

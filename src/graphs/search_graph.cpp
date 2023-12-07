@@ -1,5 +1,7 @@
-#include "graphs/search_graph.h"
+#include <spdlog/spdlog.h>
+
 #include "graphs/roadmap_vertex.h"
+#include "graphs/search_graph.h"
 #include "graphs/search_vertex.h"
 
 using namespace grrt;
@@ -31,4 +33,25 @@ SearchVertex::SharedPtr SearchGraph::sampleAdjacentVertex(const SearchVertex::Sh
     }
 
     return std::make_shared<SearchVertex>(adjacent_vertices_id);
+}
+
+std::vector<RoadmapDart::SharedPtr> SearchGraph::getRoadmapDarts(const SearchVertex::SharedPtr& start,
+                                                                 const SearchVertex::SharedPtr& end) {
+    std::vector<RoadmapDart::SharedPtr> darts;
+
+    const size_t num_robots = roadmaps.size();
+    for (size_t i = 0; i < num_robots; i++) {
+        auto roadmap = roadmaps[i];
+        auto start_vertex = roadmap->vertices[start->roadmapStates[i]];
+        auto end_vertex = roadmap->vertices[end->roadmapStates[i]];
+
+        auto dart = roadmap->getDart(start_vertex, end_vertex);
+        if (dart == nullptr) {
+            spdlog::error("Failed to find dart from {} to {}", start_vertex->m_id, end_vertex->m_id);
+            exit(1);
+        }
+        darts.push_back(dart);
+    }
+
+    return darts;
 }
