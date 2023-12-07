@@ -1,16 +1,18 @@
 #include "solver/solver.h"
+#include "spdlog/spdlog.h"
 
 #include "graphs/search_tree.h"
 #include "graphs/search_vertex.h"
 #include "pkgs/rapidyaml.hpp"
+
 
 using namespace grrt;
 
 Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
     // Initialize the search graph (generic, will be shared between all problems)
     std::vector<Roadmap::SharedPtr> roadmaps;
-    for (const auto& pair : m_config->roadmaps) {
-        roadmaps.push_back(pair.second);
+    for (const auto& robot : m_config->robots) {
+        roadmaps.push_back(robot->roadmap);
     }
     m_searchGraph = std::make_shared<SearchGraph>(roadmaps);
 }
@@ -20,15 +22,14 @@ SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const Se
     // Start at the goal state, and trace back to the start state.
     SolverResult result(true);
     SearchVertex::SharedPtr current = goal;
-    while (current != nullptr) {
+    while (true) {
         result.path.push_back(current);
         auto parent_dart = searchTree->getParentDart(current);
-        if (parent_dart != nullptr) {
-            result.cost += parent_dart->cost;
-        }
+        if (parent_dart == nullptr) { break; }
+
+        result.cost += parent_dart->cost;
         current = parent_dart->head;
     }
-
     return result;
 }
 
@@ -51,15 +52,23 @@ void Solver::expand(SearchTree::SharedPtr& searchTree) {
 SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
     SearchTree::SharedPtr T = std::make_shared<SearchTree>(m_searchGraph, problem.start);
 
+    // compute shortest paths over all roadmaps
+    std::cout << "test" << std::endl;
+    spdlog::info("Start computing shortest paths");
+    for (const auto& roadmap : m_searchGraph->roadmaps) {
+        roadmap->computeAllPairsShortestPath();
+    }
+    spdlog::info("Finished computing shortest paths");
+
     const int num_iterations = 100;
 
     while (!cancellationToken) {
         for (uint32_t i = 0; i < num_iterations; i++) {
-            std::cout << "Iteration " << i << " of " << num_iterations << "\n";
             expand(T);
         }
 
         if (T->contains(problem.goal)) {
+            auto result = tracePath(T, problem.start, problem.goal);
             return tracePath(T, problem.start, problem.goal);
         }
     }
@@ -72,6 +81,12 @@ SolverSolutions Solver::solve() {
     std::atomic_bool cancellationToken(false);
 
     SolverSolutions solutions = std::make_unique<std::unordered_map<std::string, SolverResult>>();
+
+    // set cancellation token to true in 10 seconds
+    std::thread([&cancellationToken]() {
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        cancellationToken = true;
+    }).detach();
 
     for (const auto& problem : m_config->problems) {
 

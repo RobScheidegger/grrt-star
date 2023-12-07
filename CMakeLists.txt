@@ -18,9 +18,9 @@ find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-include_directories(SYSTEM 
-  ${MPI_INCLUDE_PATH} 
-  ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} 
+include_directories(SYSTEM
+  ${MPI_INCLUDE_PATH}
+  ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
   ${rclcpp_INCLUDE_DIRS}
   ${rmw_INCLUDE_DIRS}
   ${std_msgs_INCLUDE_DIRS}
@@ -89,13 +89,13 @@ add_library(grrt
 add_executable(grrt_solver
   src/grrt_solver.cpp)
 
-add_executable(grrt_player
-  src/grrt_player.cpp)
-
 target_link_libraries(grrt_solver
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
   PRIVATE ${MPI_CXX_LIBRARIES}
   PRIVATE grrt)
+
+add_executable(grrt_player
+  src/grrt_player.cpp)
 
 target_link_libraries(grrt_player
   spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
@@ -131,8 +131,10 @@ add_executable(grrt_tests
   test/test_basic_expansion.cpp
 )
 
-
-
-target_link_libraries(grrt_tests gtest_main grrt)
+target_link_libraries(grrt_tests
+  gtest_main
+  grrt
+  spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
+)
 include(GoogleTest)
 gtest_discover_tests(grrt_tests)

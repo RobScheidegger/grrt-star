@@ -15,6 +15,10 @@ namespace grrt {
         const std::vector<RoadmapVertexId> roadmapStates;
     };
 
+    inline bool operator==(const SearchVertex::SharedPtr& lhs, const SearchVertex::SharedPtr& rhs) {
+        return lhs->roadmapStates == rhs->roadmapStates;
+    }
+
     class SearchVertexHash {
        public:
         size_t operator()(const SearchVertex::SharedPtr& vertex) const {
