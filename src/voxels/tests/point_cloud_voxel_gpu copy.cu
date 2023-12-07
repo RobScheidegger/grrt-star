@@ -17,8 +17,8 @@
 #define WARPS_PER_BLOCK 32
 #define WARP_SIZE 32
 #define FLOATS_PER_POINT 3
-#define NUM_PCV1_POINTS_PER_THREAD 1
-#define NUM_PCV2_POINTS_PER_THREAD 512
+#define NUM_PCV1_POINTS_PER_THREAD 4
+#define NUM_PCV2_POINTS_PER_THREAD 512 * 8
 
 
 using namespace grrt;
@@ -32,12 +32,12 @@ __global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_
     int lane_id = threadIdx.x % THREADS_PER_WARP;
 
     // A thread acts on three floats
-    int pcl_v1_start_i = (blockIdx.x * MAX_THREADS_PER_BLOCK + lane_id * WARP_SIZE + warp_id) * FLOATS_PER_POINT * NUM_PCV1_POINTS_PER_THREAD ;
+    int pcl_v1_start_i = (blockIdx.x * MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD + lane_id * WARP_SIZE + warp_id) * FLOATS_PER_POINT;
     int pcl_v2_start_i = blockIdx.y * FLOATS_PER_POINT * NUM_PCV2_POINTS_PER_THREAD;
 
     // if (pcl_v1_start_i >= pcl_voxel_1_count || pcl_v2_start_i >= pcl_voxel_2_count) {
     //     return;
-    // } 16384 992
+    // }
 
     // if (pcl_v1_start_i + (NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT) - 1 >= pcl_voxel_1_count 
     // || pcl_v2_start_i + (NUM_PCV2_POINTS_PER_THREAD * FLOATS_PER_POINT) - 1 >=  pcl_voxel_2_count) {
@@ -55,7 +55,8 @@ __global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_
     int sum = 0;
     
     for (int pcl_v1_i = pcl_v1_start_i; pcl_v1_i < pcl_v1_start_i + NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT; pcl_v1_i += 3) {
-        
+        // printf("Point: (%f, %f, %f) at %d and Point: (%f, %f, %f) at %d\n", pcl_voxel_1_pnts[pcl_v1_i], pcl_voxel_1_pnts[pcl_v1_i + 1], pcl_voxel_1_pnts[pcl_v1_i + 2], pcl_v1_i, pcl_voxel_2_pnts[pcl_v2_i], pcl_voxel_2_pnts[pcl_v2_i + 1], pcl_voxel_2_pnts[pcl_v2_i + 2], pcl_v2_i);
+
         // TODO: this is a bit scuffed but it works
         if (pcl_v1_i >= pcl_voxel_1_count) {
                 return;
@@ -64,29 +65,23 @@ __global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_
         for (int pcl_v2_i = pcl_v2_start_i; pcl_v2_i < pcl_v2_start_i + NUM_PCV2_POINTS_PER_THREAD * FLOATS_PER_POINT; pcl_v2_i += 3) {
 
             if (pcl_v2_i >= pcl_voxel_2_count) {
-                break;
+                continue;
             }
+
+            
+
         float dist = std::sqrt(
         (pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) * (pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) 
         + (pcl_voxel_1_pnts[pcl_v1_i + 1] - pcl_voxel_2_pnts[pcl_v2_i + 1]) * (pcl_voxel_1_pnts[pcl_v1_i + 1] - pcl_voxel_2_pnts[pcl_v2_i + 1]) 
         + (pcl_voxel_1_pnts[pcl_v1_i + 2] - pcl_voxel_2_pnts[pcl_v2_i + 2]) * (pcl_voxel_1_pnts[pcl_v1_i + 2] - pcl_voxel_2_pnts[pcl_v2_i + 2]));
 
-            // printf("Point: (%f, %f, %f) at %d and Point: (%f, %f, %f) at %d with dist: %f\n", pcl_voxel_1_pnts[pcl_v1_i], pcl_voxel_1_pnts[pcl_v1_i + 1], pcl_voxel_1_pnts[pcl_v1_i + 2], pcl_v1_i, pcl_voxel_2_pnts[pcl_v2_i], pcl_voxel_2_pnts[pcl_v2_i + 1], pcl_voxel_2_pnts[pcl_v2_i + 2], pcl_v2_i, dist);
-
-
-            
-
-
         // printf("dist: %f\n", dist);
 
-        // if (dist < 0.5) {
-        // if (pcl_v1_i > 58000) {
-        //     printf("Point: (%f, %f, %f) at %d and Point: (%f, %f, %f) at %d with dist: %f\n", pcl_voxel_1_pnts[pcl_v1_i], pcl_voxel_1_pnts[pcl_v1_i + 1], pcl_voxel_1_pnts[pcl_v1_i + 2], pcl_v1_i, pcl_voxel_2_pnts[pcl_v2_i], pcl_voxel_2_pnts[pcl_v2_i + 1], pcl_voxel_2_pnts[pcl_v2_i + 2], pcl_v2_i, dist);
+        // if (dist < 2) {
+        //     printf("Point: (%f, %f, %f) and Point: (%f, %f, %f) are within 0.15\n", pcl_voxel_1_pnts[pcl_v1_i], pcl_voxel_1_pnts[pcl_v1_i + 1], pcl_voxel_1_pnts[pcl_v1_i + 2], pcl_voxel_2_pnts[pcl_v2_i], pcl_voxel_2_pnts[pcl_v2_i + 1], pcl_voxel_2_pnts[pcl_v2_i + 2]);
         // }
 
         if (dist < PCL_VOXEL_RADIUS) {
-            // printf("Point: (%f, %f, %f) at %d and Point: (%f, %f, %f) at %d with dist: %f\n", pcl_voxel_1_pnts[pcl_v1_i], pcl_voxel_1_pnts[pcl_v1_i + 1], pcl_voxel_1_pnts[pcl_v1_i + 2], pcl_v1_i, pcl_voxel_2_pnts[pcl_v2_i], pcl_voxel_2_pnts[pcl_v2_i + 1], pcl_voxel_2_pnts[pcl_v2_i + 2], pcl_v2_i, dist);
-
             sum += 1;
         }
         }
@@ -148,12 +143,6 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
 
     float *bool_sum;
 
-    // printf("start_point 1: (%f, %f, %f)\n", pcl_voxel_1->start_point.x, pcl_voxel_1->start_point.y, pcl_voxel_1->start_point.z);
-    // printf("end_point 1: (%f, %f, %f)\n", pcl_voxel_1->end_point.x, pcl_voxel_1->end_point.y, pcl_voxel_1->end_point.z);
-
-    // printf("start_point 2: (%f, %f, %f)\n", pcl_voxel_2->start_point.x, pcl_voxel_2->start_point.y, pcl_voxel_2->start_point.z);
-    // printf("end_point 2: (%f, %f, %f)\n", pcl_voxel_2->end_point.x, pcl_voxel_2->end_point.y, pcl_voxel_2->end_point.z);
-
     // Each MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD Points in pcl_voxel_1 will be worked on by a block, but the shuffle operation only occurs within a warp which is 32 threads aka 32 points (through 32 * 3 floats) in pcv1.
     // printf("blah: %lu\n", pcl_voxel_1->num_points);
     int num_blocks_pcv1 = CEIL(pcl_voxel_1->num_points, (3 * MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD));
@@ -183,9 +172,6 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
     // printf("pcl_voxel_2 points: %f\n", pcl_voxel_2->points[1]);
     // printf("pcl_voxel_2 points: %f\n", pcl_voxel_2->points[2]);
 
-    // printf("pcl_voxel_1 points: %lu\n", pcl_voxel_1->num_points);
-    // printf("pcl_voxel_2 points: %lu\n", pcl_voxel_2->num_points);
-
     // printf("a: %d\n", num_blocks_pcv1);
     // printf("b: %d\n", num_blocks_pcv2);
 
@@ -197,14 +183,11 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
     
     for (int i = 0; i < bool_sum_size; i++) {
         if (bool_sum[i] > 0) {
-            // printf("collision!\n");
+            // printf("collision detected\n");
             res = true;
             break;
         }
     }
-
-    // if (!res) {
-    //     printf("no collision!\n");}
 
 
      auto end = std::chrono::high_resolution_clock::now();

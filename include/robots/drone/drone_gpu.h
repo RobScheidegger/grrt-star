@@ -38,14 +38,20 @@ namespace grrt {
             Point start_point = start_state->position;
             Point end_point = end_state->position;
 
+            // printf("start_point: (%f, %f, %f)\n", start_point.x, start_point.y, start_point.z);
+            // printf("end_point: (%f, %f, %f)\n", end_point.x, end_point.y, end_point.z);
+
             float sweep_length = start_point.distance(end_point);
 
             // We can't use a Point* here, instead a float* wehre each point is represented as three consecutive floats in the points array.
-            // printf("divisions: %f\n", sweep_length / VOXEL_SWEEP_STEP_SIZE);
+            // printf("divisions: %d\n", int(sweep_length / VOXEL_SWEEP_STEP_SIZE));
             // the +1 is beccause a voxel is also generated at swept_distance = 0
-            int cloud_point_size = VOXEL_POINTS_SAMPLING_SIZE * (ceil(sweep_length / VOXEL_SWEEP_STEP_SIZE) + 1) * 3;
+            int cloud_point_size = VOXEL_POINTS_SAMPLING_SIZE * (int(sweep_length / VOXEL_SWEEP_STEP_SIZE) + 1) * 3;
 
             PointCloudVoxelGPU::SharedPtr cloud = std::make_shared<PointCloudVoxelGPU>(cloud_point_size);
+
+            cloud->start_point = start_point;
+            cloud->end_point = end_point;
 
             // generate fibonacci sphere: https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
             float phi = M_PI * (std::sqrt(5.) - 1.);  // golden angle in radian

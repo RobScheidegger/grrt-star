@@ -29,9 +29,6 @@ namespace grrt {
         const size_t num_points = 0;
         float* points = nullptr;
 
-        Point start_point;
-        Point end_point;
-
        private:
         const float m_radius = PCL_VOXEL_RADIUS;
 
@@ -49,6 +46,12 @@ namespace grrt {
             // TODO
             return nullptr;
         }
+
+        PointCloudVoxelGPUManager();
+
+        ~PointCloudVoxelGPUManager();
+
+        int *bool_sum = nullptr;
     };
 
     // for the gpu variants, it will call the cuda kernel.

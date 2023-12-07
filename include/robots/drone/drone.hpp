@@ -50,6 +50,9 @@ namespace grrt {
             Point start_point = start_state->position;
             Point end_point = end_state->position;
 
+            // printf("start_point: (%f, %f, %f)\n", start_point.x, start_point.y, start_point.z);
+            // printf("end_point: (%f, %f, %f)\n", end_point.x, end_point.y, end_point.z);
+
             float sweep_length = start_point.distance(end_point);
 
             for (float swept_distance = 0; swept_distance <= sweep_length; swept_distance += VOXEL_SWEEP_STEP_SIZE) {
@@ -76,6 +79,9 @@ namespace grrt {
             }
 
             dart->voxel = cloud;
+
+            cloud->start_point = start_point;
+            cloud->end_point = end_point;
 
             return cloud;
         }
