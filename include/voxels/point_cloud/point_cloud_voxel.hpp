@@ -2,14 +2,12 @@
 
 #include <vector>
 
+#include "constants.h"
 #include "point.h"
 #include "voxels/voxel.h"
 #include "voxels/voxel_manager.h"
 
 // this is the size of each point in the point cloud (used as a threshold to see if any points are in the range of any points from a different voxelspread).
-#ifndef PCL_VOXEL_RADIUS
-#define PCL_VOXEL_RADIUS 0.05
-#endif
 
 namespace grrt {
 
