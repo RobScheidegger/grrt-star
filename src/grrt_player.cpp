@@ -137,7 +137,7 @@ class Publisher : public rclcpp::Node {
             spdlog::info("Publishing voxel for robot {} with {} points", i, cloud->m_points.size());
 
             pcl_msg->width += cloud->m_points.size();
-            pcl_msg->points.reserve(pcl_msg->width);
+            pcl_msg->points.reserve(cloud->m_points.size());
 
             for (std::size_t i = 0; i < cloud->m_points.size(); ++i) {
                 pcl_msg->points.push_back(
@@ -149,7 +149,7 @@ class Publisher : public rclcpp::Node {
         pcl::toROSMsg(*pcl_msg, msg);
         msg.header.frame_id = "map";
         msg.header.stamp = this->now();
-        spdlog::info("Publishing voxel with {} points", msg.data.size());
+        spdlog::info("Publishing voxel with {}, {} points", msg.data.size(), pcl_msg->points.size());
         m_voxelPublisher->publish(msg);
     }
 
