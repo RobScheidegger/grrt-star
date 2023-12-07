@@ -19,26 +19,26 @@ Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
     m_voxelManager = config->robotFactory->makeVoxelManager();
 }
 
-SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
-                               const SearchVertex::SharedPtr& goal) const {
+SolverResult::SharedPtr Solver::tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
+                                          const SearchVertex::SharedPtr& goal) const {
     // Start at the goal state, and trace back to the start state.
     assert(start != nullptr);
     assert(goal != nullptr);
-    SolverResult result(true);
+    SolverResult::SharedPtr result = std::make_shared<SolverResult>(true);
     SearchVertex::SharedPtr current = goal;
     while (current != nullptr) {
-        result.path.push_back(current);
+        result->path.push_back(current);
         auto parent_dart = searchTree->getParentDart(current);
         if (parent_dart == nullptr) {
             break;
         }
 
-        result.cost += parent_dart->cost;
+        result->cost += parent_dart->cost;
         current = parent_dart->head;
     }
 
     // TEST: Check that none of the things are nullptr
-    for (const auto& vertex : result.path) {
+    for (const auto& vertex : result->path) {
         assert(vertex != nullptr);
     }
 
@@ -67,7 +67,7 @@ bool Solver::expand(SearchTree::SharedPtr& searchTree, const SearchVertex::Share
     return false;
 }
 
-SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
+SolverResult::SharedPtr Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
     SearchTree::SharedPtr T = std::make_shared<SearchTree>(m_searchGraph, problem.start);
 
     const int num_iterations = 10;
@@ -92,7 +92,7 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
     auto nearest = T->getNearestPoint(problem.goal);
     if (nearest != nullptr) {
         result = tracePath(T, problem.start, nearest);
-        result.success = false;
+        result->success = false;
         return result;
     }
     return result;
@@ -100,7 +100,7 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
 
 SolverSolutions Solver::solve() {
 
-    SolverSolutions solutions = std::make_unique<std::unordered_map<std::string, SolverResult>>();
+    SolverSolutions solutions = std::make_unique<std::unordered_map<std::string, SolverResult::SharedPtr>>();
 
     auto start = std::chrono::high_resolution_clock::now();
     this->computeVoxels();
@@ -162,15 +162,12 @@ SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& ne
         }
 
         // Check that the edge between the near vertex and new vertex is collision free.
-        auto newDart = std::make_shared<SearchDart>(nearVertex, newVertex, 1);
         auto darts = m_searchGraph->getRoadmapDarts(nearVertex, newVertex);
-        spdlog::info("Checking dart {}", newDart->toString());
         auto start = std::chrono::high_resolution_clock::now();
         bool collisionFree = checkCollisionFreeDarts(darts);
         auto end = std::chrono::high_resolution_clock::now();
         auto collision_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         spdlog::trace("Collision check took {} ms", collision_time);
-        spdlog::info("Checked dart {}", newDart->toString());
 
         if (collisionFree) {
             return newVertex;

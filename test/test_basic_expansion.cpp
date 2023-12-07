@@ -49,7 +49,7 @@ TEST(SolverExpansion, TestBasicRRTExpansion1) {
     Solver solver = Solver(config);
     auto solutions = solver.solve();
 
-    EXPECT_FALSE(solutions->at("Test Drone Roadmap").success);
+    EXPECT_FALSE(solutions->at("Test Drone Roadmap")->success);
 }
 
 TEST(SolverExpansion, TestBasicRRTExpansion2) {
@@ -87,5 +87,5 @@ TEST(SolverExpansion, TestBasicRRTExpansion2) {
     Solver solver = Solver(config);
     auto solutions = solver.solve();
 
-    EXPECT_TRUE(solutions->at("Test Drone Roadmap").success);
+    EXPECT_TRUE(solutions->at("Test Drone Roadmap")->success);
 }

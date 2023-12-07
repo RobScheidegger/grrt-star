@@ -432,14 +432,14 @@ SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName) {
 }
 
 Result SolverConfigParser::printSolution(std::ostream& stream, const SolverConfig::SharedPtr& config,
-                                         const SolverResult& solution) {
+                                         const SolverResult::SharedPtr& solution) {
     assert(config != nullptr);
-    stream << solution.cost << std::endl;
-    stream << solution.time << std::endl;
+    stream << solution->cost << std::endl;
+    stream << solution->time << std::endl;
 
     // Print the path as a CSV line-by-line
     const auto num_robots = config->robots.size();
-    for (const auto& state : solution.path) {
+    for (const auto& state : solution->path) {
         assert(state != nullptr);
         for (uint32_t i = 0; i < num_robots; i++) {
             stream << state->roadmapStates[i];
@@ -449,9 +449,11 @@ Result SolverConfigParser::printSolution(std::ostream& stream, const SolverConfi
         }
         stream << std::endl;
     }
+
+    return Result::Ok();
 }
 
-Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResult& solution) {
+Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResult::SharedPtr& solution) {
     std::ifstream file(fileName);
     if (!file.is_open()) {
         std::cerr << "Could not open file: " << fileName << std::endl;
@@ -460,10 +462,10 @@ Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResu
 
     std::string line;
     std::getline(file, line);
-    solution.cost = std::stod(line);
+    solution->cost = std::stod(line);
 
     std::getline(file, line);
-    solution.time = std::stod(line);
+    solution->time = std::stod(line);
 
     while (std::getline(file, line)) {
         std::stringstream line_stream(line);
@@ -472,7 +474,7 @@ Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResu
         while (std::getline(line_stream, cell, ',')) {
             roadmapStates.push_back(std::stoi(cell));
         }
-        solution.path.push_back(std::make_shared<SearchVertex>(roadmapStates));
+        solution->path.push_back(std::make_shared<SearchVertex>(roadmapStates));
     }
 
     return Result::Ok();

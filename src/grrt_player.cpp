@@ -22,7 +22,7 @@ using namespace sensor_msgs::msg;
 
 class Publisher : public rclcpp::Node {
    public:
-    Publisher(SolverResult& result, const SolverConfig::SharedPtr& config)
+    Publisher(SolverResult::SharedPtr& result, const SolverConfig::SharedPtr& config)
         : result(result), config(config), Node("point_cloud_publisher") {
         m_positionPublisher = this->create_publisher<PointCloud2>("positions", 10);
         m_voxelPublisher = this->create_publisher<PointCloud2>("voxels", 10);
@@ -52,12 +52,12 @@ class Publisher : public rclcpp::Node {
     }
 
     /// @brief Play the solution in RViz by publishing to the appropriate topics over time
-    void playSolution(const SolverResult& result, const SolverConfig::SharedPtr& config) {
+    void playSolution(const SolverResult::SharedPtr& result, const SolverConfig::SharedPtr& config) {
 
         // Wrap everything in an infinite loop to have everything repeat
         while (true) {
             SearchVertex::SharedPtr current_vertex = nullptr;
-            for (auto& vertex : result.path) {
+            for (auto& vertex : result->path) {
                 if (current_vertex == nullptr) {
                     current_vertex = vertex;
                     continue;
@@ -225,7 +225,7 @@ class Publisher : public rclcpp::Node {
         m_voxelPublisher->publish(msg);
     }
 
-    const SolverResult result;
+    const SolverResult::SharedPtr result;
     const SolverConfig::SharedPtr config;
     rclcpp::Publisher<PointCloud2>::SharedPtr m_voxelPublisher;
     rclcpp::Publisher<PointCloud2>::SharedPtr m_positionPublisher;
@@ -277,7 +277,7 @@ int main(int argc, char** argv) {
 
     // Load in the solution file
     spdlog::info("Loading solution file: {}", options.solution_file);
-    SolverResult solution;
+    SolverResult::SharedPtr solution = std::make_shared<SolverResult>(true);
     Result result = SolverConfigParser::parseSolution(options.solution_file, solution);
 
     std::shared_ptr<Publisher> publisher = std::make_shared<Publisher>(solution, config);
@@ -292,13 +292,13 @@ int main(int argc, char** argv) {
     if (options.voxel != 0) {
         spdlog::info("Visualizing voxel {}", options.voxel);
 
-        if (options.voxel > solution.path.size()) {
+        if (options.voxel > solution->path.size()) {
             spdlog::error("Voxel index {} is out of bounds", options.voxel);
             return 1;
         }
 
-        const auto start_vertex = solution.path[options.voxel - 1];
-        const auto end_vertex = solution.path[options.voxel];
+        const auto start_vertex = solution->path[options.voxel - 1];
+        const auto end_vertex = solution->path[options.voxel];
 
         auto roadmap_darts = publisher->getRoadmapDarts(start_vertex, end_vertex);
 

@@ -25,6 +25,6 @@ namespace grrt {
         /// @brief The time taken to solve the problem (in seconds).
         double time;
 
-        static SolverResult fail() { return SolverResult(false); }
+        static SolverResult::SharedPtr fail() { return std::make_shared<SolverResult>(false); }
     };
 }  // namespace grrt

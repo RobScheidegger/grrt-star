@@ -12,7 +12,7 @@ namespace grrt {
        public:
         static SolverConfig::SharedPtr parse(const std::string& filePath);
         static Result printSolution(std::ostream& stream, const SolverConfig::SharedPtr& config,
-                                    const SolverResult& solution);
-        static Result parseSolution(const std::string& fileName, SolverResult& solution);
+                                    const SolverResult::SharedPtr& solution);
+        static Result parseSolution(const std::string& fileName, SolverResult::SharedPtr& solution);
     };
 }  // namespace grrt

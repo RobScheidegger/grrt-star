@@ -13,7 +13,7 @@ namespace grrt {
 
     enum SolverMode { DRRT };
 
-    typedef std::unique_ptr<std::unordered_map<std::string, SolverResult>> SolverSolutions;
+    typedef std::unique_ptr<std::unordered_map<std::string, SolverResult::SharedPtr>> SolverSolutions;
 
     /// @brief The solver is responsible for solving a particular motion planning problem with dRRT or other solvers.
     class Solver {
@@ -32,13 +32,13 @@ namespace grrt {
         SearchGraph::SharedPtr m_searchGraph;
         VoxelManager::SharedPtr m_voxelManager;
 
-        SolverResult solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken);
+        SolverResult::SharedPtr solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken);
 
         bool expand(SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& goal);
 
         void computeVoxels();
 
-        SolverResult tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
+        SolverResult::SharedPtr tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
                                const SearchVertex::SharedPtr& goal) const;
 
         bool checkCollisionFreeDarts(const std::vector<RoadmapDart::SharedPtr> darts) const;

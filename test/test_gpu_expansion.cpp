@@ -49,7 +49,7 @@ TEST(SolverExpansionGPU, TestGPURRTExpansion1) {
     Solver solver = Solver(config);
     auto solutions = solver.solve();
 
-    EXPECT_FALSE(solutions->at("Test Drone Roadmap").success);
+    EXPECT_FALSE(solutions->at("Test Drone Roadmap")->success);
 }
 
 TEST(SolverExpansionGPU, TestGPURRTExpansion2) {
@@ -87,5 +87,5 @@ TEST(SolverExpansionGPU, TestGPURRTExpansion2) {
     Solver solver = Solver(config);
     auto solutions = solver.solve();
 
-    EXPECT_TRUE(solutions->at("Test Drone Roadmap").success);
+    EXPECT_TRUE(solutions->at("Test Drone Roadmap")->success);
 }

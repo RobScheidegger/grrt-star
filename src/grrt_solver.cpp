@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 
     auto solutions = solver->solve();
     for (const auto& [solution_name, solution] : *solutions) {
-        spdlog::info("Solution: cost {} success {}", solution.cost, solution.success);
+        spdlog::info("Solution: cost {} success {}", solution->cost, solution->success);
         // Open a file to write the solution to.
         std::string solutionFileName = "solution_" + solution_name + ".yaml.sol";
         std::ofstream solutionFile(solutionFileName);
