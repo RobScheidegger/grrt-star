@@ -29,6 +29,9 @@ namespace grrt {
 
         const float m_radius = PCL_VOXEL_RADIUS;
 
+        Point start_point;
+        Point end_point;
+
         std::vector<Point> m_points;
     };
 
@@ -40,14 +43,29 @@ namespace grrt {
             PointCloudVoxel::SharedPtr pcl_voxel_1 = std::dynamic_pointer_cast<PointCloudVoxel>(voxel_1);
             PointCloudVoxel::SharedPtr pcl_voxel_2 = std::dynamic_pointer_cast<PointCloudVoxel>(voxel_2);
 
+            // printf("start_point 1: (%f, %f, %f)\n", pcl_voxel_1->start_point.x, pcl_voxel_1->start_point.y,
+            //        pcl_voxel_1->start_point.z);
+            // printf("end_point 1: (%f, %f, %f)\n", pcl_voxel_1->end_point.x, pcl_voxel_1->end_point.y,
+            //        pcl_voxel_1->end_point.z);
+
+            // printf("start_point 2: (%f, %f, %f)\n", pcl_voxel_2->start_point.x, pcl_voxel_2->start_point.y,
+            //        pcl_voxel_2->start_point.z);
+            // printf("end_point 2: (%f, %f, %f)\n", pcl_voxel_2->end_point.x, pcl_voxel_2->end_point.y,
+            //        pcl_voxel_2->end_point.z);
+
+            int i = 0;
             for (const Point& point_1 : pcl_voxel_1->m_points) {
+                int j = 0;
                 for (const Point& point_2 : pcl_voxel_2->m_points) {
                     if (point_1.distance_squared(point_2) < PCL_VOXEL_RADIUS * PCL_VOXEL_RADIUS) {
                         return true;
                     }
+                    j += 3;
                 }
+                i += 3;
             }
 
+            // printf("no collision!\n");
             return false;
         }
 

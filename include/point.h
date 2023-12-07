@@ -21,6 +21,8 @@ namespace grrt {
         /// @param z The `z`-coordinate of the point (up direction).
         Point(const float x, const float y, const float z) : x(x), y(y), z(z) {}
 
+        Point() : x(0), y(0), z(0) {}
+
         inline Point operator+(const Point& other) const { return Point(x + other.x, y + other.y, z + other.z); }
 
         inline Point operator-(const Point& other) const { return Point(x - other.x, y - other.y, z - other.z); }
