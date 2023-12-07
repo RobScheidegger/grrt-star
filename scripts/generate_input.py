@@ -1,5 +1,5 @@
 """
-This file generates input YAML files for the solver, based on 
+This file generates input YAML files for the solver, based on
 """
 
 import argparse
@@ -22,9 +22,8 @@ argparser.add_argument(
 
 argparser.add_argument(
     "--random",
-    type=bool,
     help="Whether to generate a random graph.",
-    required=False,
+    action="store_true",
 )
 
 argparser.add_argument(
@@ -50,9 +49,8 @@ argparser.add_argument(
 argparser.add_argument(
     "-s",
     "--solution",
-    type=bool,
     help="Whether to generate a solution.",
-    required=False,
+    action="store_true",
 )
 
 args = argparser.parse_args()
@@ -72,7 +70,7 @@ if args.type == "circle_rotate":
         (
             args.radius * math.cos(2 * math.pi * i / args.n),
             args.radius * math.sin(2 * math.pi * i / args.n),
-            2,
+            5,
         )
         for i in range(args.n)
     ]
