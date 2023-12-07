@@ -458,10 +458,10 @@ Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResu
 
     std::string line;
     std::getline(file, line);
-    solution.cost = std::stof(line);
+    solution.cost = std::stod(line);
 
     std::getline(file, line);
-    solution.time = std::stof(line);
+    solution.time = std::stod(line);
 
     while (std::getline(file, line)) {
         std::stringstream line_stream(line);
