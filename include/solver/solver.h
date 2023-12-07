@@ -34,7 +34,7 @@ namespace grrt {
 
         SolverResult solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken);
 
-        void expand(SearchTree::SharedPtr& searchTree);
+        bool expand(SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& goal);
 
         void computeVoxels();
 

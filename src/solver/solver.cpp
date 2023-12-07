@@ -27,7 +27,9 @@ SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const Se
     while (true) {
         result.path.push_back(current);
         auto parent_dart = searchTree->getParentDart(current);
-        if (parent_dart == nullptr) { break; }
+        if (parent_dart == nullptr) {
+            break;
+        }
 
         result.cost += parent_dart->cost;
         current = parent_dart->head;
@@ -35,7 +37,7 @@ SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const Se
     return result;
 }
 
-void Solver::expand(SearchTree::SharedPtr& searchTree) {
+bool Solver::expand(SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& goal) {
     // Sample a random vertex.
     SearchVertex::SharedPtr q_rand = m_searchGraph->getRandomVertex();
 
@@ -47,9 +49,14 @@ void Solver::expand(SearchTree::SharedPtr& searchTree) {
 
     // Add x_new to the search tree.
     if (v_new != nullptr && !searchTree->contains(v_new)) {
-        std::cout << "adding a vertex to the tree" << std::endl;
         searchTree->addVertex(v_new, std::make_shared<SearchDart>(v_near, v_new, 1));
+
+        if (v_new == goal) {
+            return true;
+        }
     }
+
+    return false;
 }
 
 SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken) {
@@ -59,16 +66,28 @@ SolverResult Solver::solveProblem(const SolverProblem& problem, std::atomic_bool
 
     while (!cancellationToken) {
         for (uint32_t i = 0; i < num_iterations; i++) {
-            expand(T);
+            auto start = std::chrono::high_resolution_clock::now();
+            if (expand(T, problem.goal))
+                break;
+            auto end = std::chrono::high_resolution_clock::now();
+            auto expand_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            spdlog::info("Expanded in {} ms", expand_time);
         }
 
         if (T->contains(problem.goal)) {
-            auto result = tracePath(T, problem.start, problem.goal);
             return tracePath(T, problem.start, problem.goal);
         }
     }
 
-    return SolverResult::fail();
+    auto result = SolverResult::fail();
+    // We failed, but find the closest node and output the path
+    auto nearest = T->getNearestPoint(problem.goal);
+    if (nearest != nullptr) {
+        result = tracePath(T, problem.start, nearest);
+        result.success = false;
+        return result;
+    }
+    return result;
 }
 
 SolverSolutions Solver::solve() {
@@ -86,8 +105,13 @@ SolverSolutions Solver::solve() {
             std::this_thread::sleep_for(std::chrono::seconds(10));
             cancellationToken = true;
         }).detach();
-
+        auto start = std::chrono::high_resolution_clock::now();
         auto result = solveProblem(problem, cancellationToken);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto solve_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+
+        spdlog::info("Solved problem {} in {} s", problem.name, solve_time);
+
         solutions->insert(std::make_pair(problem.name, result));
     }
 
@@ -127,7 +151,14 @@ SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& ne
         // Check that the edge between the near vertex and new vertex is collision free.
         auto newDart = std::make_shared<SearchDart>(nearVertex, newVertex, 1);
         auto darts = m_searchGraph->getRoadmapDarts(nearVertex, newVertex);
-        if (checkCollisionFreeDarts(darts)) {
+
+        auto start = std::chrono::high_resolution_clock::now();
+        bool collisionFree = checkCollisionFreeDarts(darts);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto collision_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        spdlog::info("Collision check took {} ms", collision_time);
+
+        if (collisionFree) {
             return newVertex;
         }
     }

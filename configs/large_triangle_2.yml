@@ -1,0 +1,54 @@
+roadmaps:
+    - name: roadmap
+      type: drone
+      states:
+          - name: left
+            to: [origin, top-left]
+            x: -10.0
+            y: 0.0
+            z: 0.0
+          - name: right
+            to: [origin, top-right]
+            x: 10.0
+            y: 0.0
+            z: 0.0
+          - name: top
+            to: [top-left, top-right]
+            x: 0.0
+            y: 10.0
+            z: 0.0
+          - name: top-left
+            to: [left, top]
+            x: -5.0
+            y: 5.0
+            z: 0.0
+          - name: top-right
+            to: [top, right]
+            x: 5.0
+            y: 5.0
+            z: 0.0
+          - name: origin
+            to: [left, right]
+            x: 0.0
+            y: 0.0
+            z: 0.0
+
+robots:
+    - name: r1
+      roadmap: roadmap
+      type: drone
+    - name: r2
+      roadmap: roadmap
+      type: drone
+
+voxels:
+    type: PCL
+
+problems:
+    - name: problem
+      start:
+          r1: left
+          r2: right
+      goal:
+          r1: right
+          r2: left

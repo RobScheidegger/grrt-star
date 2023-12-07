@@ -10,6 +10,8 @@
 
 using namespace grrt;
 
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+
 struct SolverCLIOptions {
     std::string configuration_file = "";
     bool useMPI = false;
@@ -57,8 +59,12 @@ int main(int argc, char** argv) {
     Solver::SharedPtr solver = std::make_shared<Solver>(config);
 
     auto solutions = solver->solve();
-    for (const auto& solution : *solutions) {
-        spdlog::info("Solution: cost {} success {}", solution.second.cost, solution.second.success);
+    for (const auto& [solution_name, solution] : *solutions) {
+        spdlog::info("Solution: cost {} success {}", solution.cost, solution.success);
+        // Open a file to write the solution to.
+        std::string solutionFileName = "solution_" + solution_name + ".yaml.sol";
+        std::ofstream solutionFile(solutionFileName);
+        SolverConfigParser::printSolution(solutionFile, config, solution);
     }
 
     return 0;
