@@ -1,20 +1,39 @@
 #pragma once
 
+#include "constants.h"
 #include "robots/robot.h"
 #include "voxels/point_cloud/point_cloud_voxel_gpu.h"
 
-#define VOXEL_SWEEP_STEP_SIZE 0.05
-#define VOXEL_POINTS_SAMPLING_SIZE 1000
+#include <math.h>
 
 namespace grrt {
+    class DroneGPUState : public RobotState {
+       public:
+        typedef std::shared_ptr<DroneGPUState> SharedPtr;
+
+        DroneGPUState(const Point& point, const float radius) : position(point), radius(radius) {}
+
+        std::string toString() const override { return "DroneGPUState: " + position.toString(); }
+
+        double distance(const RobotState::SharedPtr& other) const override {
+            DroneGPUState::SharedPtr droneGPUState = std::dynamic_pointer_cast<DroneGPUState>(other);
+            return position.distance(droneGPUState->position);
+        }
+
+        Point getPosition() const override { return position; }
+
+        Point position;
+        float radius;
+    };
+
     class DroneGPU : public IRobot {
        public:
         DroneGPU(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap)
             : IRobot(id, name, roadmap) {}
 
         Voxel::SharedPtr getSweptVoxel(const RoadmapDart::SharedPtr& dart) override {
-            DroneState::SharedPtr start_state = std::dynamic_pointer_cast<DroneState>(dart->getStartState());
-            DroneState::SharedPtr end_state = std::dynamic_pointer_cast<DroneState>(dart->getEndState());
+            DroneGPUState::SharedPtr start_state = std::dynamic_pointer_cast<DroneGPUState>(dart->getStartState());
+            DroneGPUState::SharedPtr end_state = std::dynamic_pointer_cast<DroneGPUState>(dart->getEndState());
 
             Point start_point = start_state->position;
             Point end_point = end_state->position;
@@ -22,14 +41,18 @@ namespace grrt {
             float sweep_length = start_point.distance(end_point);
 
             // We can't use a Point* here, instead a float* wehre each point is represented as three consecutive floats in the points array.
-            int cloud_point_size = VOXEL_POINTS_SAMPLING_SIZE * int(sweep_length / VOXEL_SWEEP_STEP_SIZE) * 3;
+            // printf("divisions: %f\n", sweep_length / VOXEL_SWEEP_STEP_SIZE);
+            // the +1 is beccause a voxel is also generated at swept_distance = 0
+            int cloud_point_size = VOXEL_POINTS_SAMPLING_SIZE * (ceil(sweep_length / VOXEL_SWEEP_STEP_SIZE) + 1) * 3;
 
             PointCloudVoxelGPU::SharedPtr cloud = std::make_shared<PointCloudVoxelGPU>(cloud_point_size);
 
             // generate fibonacci sphere: https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
             float phi = M_PI * (std::sqrt(5.) - 1.);  // golden angle in radian
 
+            int thing = 0;
             for (float swept_distance = 0; swept_distance <= sweep_length; swept_distance += VOXEL_SWEEP_STEP_SIZE) {
+                thing += 1;
                 float a = swept_distance;
                 float b = sweep_length - swept_distance;
 
@@ -52,15 +75,18 @@ namespace grrt {
                 }
             }
 
+            printf("thing: %d\n", thing);
+            printf("cloud_point_size: %d\n", cloud_point_size);
+
             return cloud;
         }
 
-        // TODO
+        // TODO: what should the size be? This is never called btw
         Voxel::SharedPtr getVoxel(const RoadmapDart::SharedPtr& dart, const double time) override {
-            PointCloudVoxel::SharedPtr cloud = std::make_shared<PointCloudVoxel>();
+            PointCloudVoxelGPU::SharedPtr cloud = std::make_shared<PointCloudVoxelGPU>(0);
 
-            DroneState::SharedPtr start_state = std::dynamic_pointer_cast<DroneState>(dart->getStartState());
-            DroneState::SharedPtr end_state = std::dynamic_pointer_cast<DroneState>(dart->getEndState());
+            DroneGPUState::SharedPtr start_state = std::dynamic_pointer_cast<DroneGPUState>(dart->getStartState());
+            DroneGPUState::SharedPtr end_state = std::dynamic_pointer_cast<DroneGPUState>(dart->getEndState());
 
             return cloud;
         }

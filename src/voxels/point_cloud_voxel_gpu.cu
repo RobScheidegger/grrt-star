@@ -17,6 +17,7 @@
 #define WARPS_PER_BLOCK 32
 #define WARP_SIZE 32
 #define FLOATS_PER_POINT 3
+#define NUM_PCV1_POINTS_PER_THREAD 1
 
 
 using namespace grrt;
@@ -24,28 +25,35 @@ using namespace grrt;
 // TODO: siddharth: add cuda kernels
 
 // each thread works on 3 floats from pcl_voxel_1 and 3 floats from pcl_voxel_2
-__global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_2_pnts, int pcl_voxel_1_count, int pcl_voxel_2_count, float* bool_sum) {
+__global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_2_pnts, int pcl_voxel_1_count, int pcl_voxel_2_count, float* bool_sum, int bool_sum_size) {
 
     int warp_id = threadIdx.x / THREADS_PER_WARP;
     int lane_id = threadIdx.x % THREADS_PER_WARP;
 
     // A thread acts on three floats
-    int pcl_v1_i = blockIdx.x * THREADS_PER_WARP * FLOATS_PER_POINT + warp_id;
+    int pcl_v1_start_i = blockIdx.x * THREADS_PER_WARP * FLOATS_PER_POINT + warp_id;
     int pcl_v2_i = blockIdx.y * FLOATS_PER_POINT;
 
-    if (pcl_v1_i >= pcl_voxel_1_count || pcl_v2_i >= pcl_voxel_2_count) {
+    // if (pcl_v1_i >= pcl_voxel_1_count || pcl_v2_i >= pcl_voxel_2_count) {
+    //     return;
+    // }
+
+    if (pcl_v1_start_i + NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT - 1 >= pcl_voxel_1_count 
+    || pcl_v2_i + NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT - 1 >=  pcl_voxel_2_count) {
         return;
     }
-    
-    int sum = 0;
 
-    float dist = std::sqrt(
+    int sum = 0;
+    
+    for (int pcl_v1_i = pcl_v1_start_i; pcl_v1_i < pcl_v1_start_i + NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT; pcl_v1_i += 3) {
+        float dist = std::sqrt(
         (pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) * (pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) 
         + (pcl_voxel_1_pnts[pcl_v1_i + 1] - pcl_voxel_2_pnts[pcl_v2_i + 1]) * (pcl_voxel_1_pnts[pcl_v1_i + 1] - pcl_voxel_2_pnts[pcl_v2_i + 1]) 
         + (pcl_voxel_1_pnts[pcl_v1_i + 2] - pcl_voxel_2_pnts[pcl_v2_i + 2]) * (pcl_voxel_1_pnts[pcl_v1_i + 2] - pcl_voxel_2_pnts[pcl_v2_i + 2]));
 
-    if (dist < PCL_VOXEL_RADIUS) {
-        sum = 1;
+        if (dist < PCL_VOXEL_RADIUS) {
+            sum += 1;
+        }
     }
 
     __syncthreads();
@@ -54,7 +62,10 @@ __global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_
         sum += __shfl_down_sync(0xffffff, sum, offset);
 
     if (lane_id == 0) {
-        bool_sum[CEIL(pcl_v1_i, FLOATS_PER_POINT)] += sum;
+        if (CEIL(pcl_v1_start_i, (NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT)) >= bool_sum_size) {
+            printf("invalid acccess int bool_sum_size\n");
+        }
+        bool_sum[CEIL(pcl_v1_start_i, (NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT))] += sum;
     }
 }
 
@@ -76,7 +87,8 @@ PointCloudVoxelGPU::~PointCloudVoxelGPU(){
 
 void PointCloudVoxelGPU::addPoint(const Point& point) {
     if (this->current_num_points >= this->num_points) {
-        printf("Point cloud voxel GPU is full");
+        printf("Point cloud voxel GPU is full\n");
+        return;
     }
     this->points[this->current_num_points] = point.x;
     this->points[this->current_num_points + 1] = point.y;
@@ -89,17 +101,20 @@ bool PointCloudVoxelGPU::contains(const Point& point) const {
     return false;
 }
 
-bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2)  {
+bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2)  {
     // will have to cast the vortex to a PointCloudVoxelGPU.
     PointCloudVoxelGPU::SharedPtr pcl_voxel_1 = std::dynamic_pointer_cast<PointCloudVoxelGPU>(voxel_1);
     PointCloudVoxelGPU::SharedPtr pcl_voxel_2 = std::dynamic_pointer_cast<PointCloudVoxelGPU>(voxel_2);
 
     float *bool_sum;
 
-    // Each MAX_THREADS_PER_BLOCK Points in pcl_voxel_1 will be worked on by a block, but the shuffle operation only occurs within a warp which is 32 threads aka 32 points (through 32 * 3 floats) in pcv1.
-    int num_blocks_pcv1 = CEIL(pcl_voxel_1->num_points, 3 * MAX_THREADS_PER_BLOCK);
+    // Each MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD Points in pcl_voxel_1 will be worked on by a block, but the shuffle operation only occurs within a warp which is 32 threads aka 32 points (through 32 * 3 floats) in pcv1.
+    printf("blah: %lu\n", pcl_voxel_1->num_points);
+    int num_blocks_pcv1 = CEIL(pcl_voxel_1->num_points, (3 * MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD));
 
-    cudaError_t err = cudaHostAlloc(&bool_sum, num_blocks_pcv1 * WARP_SIZE * sizeof(float), cudaHostAllocDefault);
+    int bool_sum_size = num_blocks_pcv1 * WARP_SIZE;
+
+    cudaError_t err = cudaHostAlloc(&bool_sum, bool_sum_size * sizeof(float), cudaHostAllocDefault);
     if (err != cudaSuccess) {
         printf("Failed to allocate memory for bool_sum");
     }
@@ -109,18 +124,29 @@ bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2)
     // 30 elements from voxel_1 and voxel_2 will be assigned to a block (we won't use the full 32 since we need to operate over 3 floats at a time)
 
 
-    // One block runs over MAX_THREADS_PER_BLOCK Points in pcl_voxel_1 and one Point in pcl_voxel_2
+    // One block runs over MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD Points in pcl_voxel_1 and one Point in pcl_voxel_2
     dim3 num_blocks(num_blocks_pcv1, CEIL(pcl_voxel_2->num_points, 3), 1);
+
+    printf("a: %d\n", num_blocks_pcv1);
+    printf("b: %lu\n", CEIL(pcl_voxel_2->num_points, 3));
+
     dim3 max_threads_per_block(MAX_THREADS_PER_BLOCK, 1, 1);
-    saxby_shuffle_single<<<num_blocks, max_threads_per_block>>>(pcl_voxel_1->points, pcl_voxel_2->points, pcl_voxel_1->num_points, pcl_voxel_2->num_points, bool_sum);
+    saxby_shuffle_single<<<num_blocks, max_threads_per_block>>>(pcl_voxel_1->points, pcl_voxel_2->points, pcl_voxel_1->num_points, pcl_voxel_2->num_points, bool_sum, bool_sum_size);
     cudaDeviceSynchronize();
 
     auto end = std::chrono::high_resolution_clock::now();
 
     err = cudaFreeHost(bool_sum);
     if (err != cudaSuccess) {
-        printf("Failed to free bool_sum for point cloud voxel gpu");
+        printf("Failed to free bool_sum for point cloud voxel gpu\n");
     }
 
-    return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    auto diff = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+    for (int i = 0; i < bool_sum_size; i++) {
+        if (bool_sum[i] > 0) {
+            return true;
+        }}
+
+     return false;
 }
