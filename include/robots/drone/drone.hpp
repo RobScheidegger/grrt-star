@@ -7,7 +7,7 @@
 #include <math.h>
 
 #define VOXEL_SWEEP_STEP_SIZE 0.05
-#define VOXEL_POINTS_SAMPLING_SIZE 1000
+#define VOXEL_POINTS_SAMPLING_SIZE 100
 
 namespace grrt {
     /// @brief State representing a simple drone.
@@ -23,6 +23,8 @@ namespace grrt {
             DroneState::SharedPtr droneState = std::dynamic_pointer_cast<DroneState>(other);
             return position.distance(droneState->position);
         }
+
+        Point getPosition() const override { return position; }
 
         Point position;
         float radius;
@@ -72,6 +74,8 @@ namespace grrt {
                                           z * start_state->radius + offset.z));
                 }
             }
+
+            dart->voxel = cloud;
 
             return cloud;
         }

@@ -23,6 +23,9 @@ namespace grrt {
         /// @return A randomly sampled vertex adjacent to the given vertex.
         SearchVertex::SharedPtr sampleAdjacentVertex(const SearchVertex::SharedPtr& vertex) const;
 
+        std::vector<RoadmapDart::SharedPtr> getRoadmapDarts(const SearchVertex::SharedPtr& start,
+                                                            const SearchVertex::SharedPtr& end);
+
         const std::vector<Roadmap::SharedPtr> roadmaps;
     };
 }  // namespace grrt

@@ -38,6 +38,16 @@ namespace grrt {
             return m_verticesByName.at(name);
         }
 
+        RoadmapDart::SharedPtr getDart(const RoadmapVertex::SharedPtr& v1, const RoadmapVertex::SharedPtr& v2) const {
+            for (const auto& dart : adjacencyList[v1->m_id]) {
+                if (dart->m_end == v2) {
+                    return dart;
+                }
+            }
+
+            return nullptr;
+        }
+
         std::vector<RoadmapVertex::SharedPtr> vertices;
         std::vector<RoadmapDart::SharedPtr> darts;
         std::vector<std::vector<RoadmapDart::SharedPtr>> adjacencyList;

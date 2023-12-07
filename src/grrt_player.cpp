@@ -1,64 +1,167 @@
-#include "pkgs/cli11.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/point_cloud2.hpp"
-#include "spdlog/spdlog.h"
-
 #include "config/solver_config.h"
 #include "config/solver_config_parser.h"
+
+#include "pcl_conversions/pcl_conversions.h"
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+
+#include "pkgs/cli11.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "spdlog/spdlog.h"
+
+#include "voxels/point_cloud/point_cloud_voxel.hpp"
 
 #include "solver/solver.h"
 
 using namespace grrt;
+using namespace sensor_msgs::msg;
 
+#define DRONE_SPEED 1.0
 #define VOXEL_PUBLISH_HZ 10
 
-/// @brief Play the solution in RViz by publishing to the appropriate topics over time
-void playSolution(cont SolverResult& result, const SolverConfig::SharedPtr& config) {}
-
-void publishSweptVoxels(const SolverConfig::SharedPtr& config, const SearchVertex::SharedPtr& head,
-                        const SearchVertex::SharedPtr& tail,
-                        const float duration = std::numeric_limits<float>::infinity()) {
-
-    // First, compute all of the voxels for each of the robot edges.
-    std::vector<Voxel::SharedPtr> voxels;
-    for (size_t i = 0; i < config->robots.size(); i++) {
-        auto start_roadmap_id = head->roadmapStates[i];
-        auto end_roadmap_id = tail->roadmapStates[i];
-
-        if (start_roadmap_id == end_roadmap_id) {
-            continue;
-        }
-
-        auto roadmap = config->robots[i]->roadmap;
-        auto start_vertex = roadmap->getVertex(start_roadmap_id);
-        auto end_vertex = roadmap->getVertex(end_roadmap_id);
-
-        auto dart = roadmap->getDart(start_vertex, end_vertex);
-
-        auto voxel = config->robots[i]->getSweptVoxel(dart);
-        PointCloudVoxel::SharedPtr cloud = std::dynamic_pointer_cast<PointCloudVoxel>(voxel);
-        std::async(std::launch::async, []() {
-            auto pcl_msg = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>());
-            pcl_msg->width = cloud.m_points.size();
-            pcl_msg->height = 1;
-            pcl_msg->points.resize(pcl_msg->width * pcl_msg->height);
-
-            for (std::size_t i = 0; i < pcl_msg->points.size(); ++i) {
-                pcl_msg->points[i].x = cloud.m_points[i].x;
-                pcl_msg->points[i].y = cloud.m_points[i].y;
-                pcl_msg->points[i].z = cloud.m_points[i].z;
-            }
-
-            auto pub = node->create_publisher<sensor_msgs::msg::>(config->robots[i].name + "/voxels", 10);
-
-            return 42;
-            for ()
-        });
-        voxels.push_back(voxel);
+class Publisher : public rclcpp::Node {
+   public:
+    Publisher(SolverResult& result, const SolverConfig::SharedPtr& config)
+        : result(result), config(config), Node("point_cloud_publisher") {
+        m_positionPublisher = this->create_publisher<PointCloud2>("positions", 10);
+        m_voxelPublisher = this->create_publisher<PointCloud2>("voxels", 10);
     }
 
-    // Now that we have all of the voxels, we loop and publish them
-}
+    std::vector<RoadmapDart::SharedPtr> getRoadmapDarts(const SearchVertex::SharedPtr& start,
+                                                        const SearchVertex::SharedPtr& end) {
+        std::vector<RoadmapDart::SharedPtr> darts;
+
+        const size_t num_robots = config->robots.size();
+        for (size_t i = 0; i < num_robots; i++) {
+            auto roadmap = config->robots[i]->roadmap;
+            auto start_vertex = roadmap->vertices[start->roadmapStates[i]];
+            auto end_vertex = roadmap->vertices[end->roadmapStates[i]];
+
+            auto dart = roadmap->getDart(start_vertex, end_vertex);
+            if (dart == nullptr) {
+                spdlog::error("Failed to find dart from {} to {}", start_vertex->m_id, end_vertex->m_id);
+                exit(1);
+            }
+            darts.push_back(dart);
+        }
+
+        return darts;
+    }
+
+    /// @brief Play the solution in RViz by publishing to the appropriate topics over time
+    void playSolution(const SolverResult& result, const SolverConfig::SharedPtr& config) {
+
+        // Wrap everything in an infinite loop to have everything repeat
+        while (true) {
+            SearchVertex::SharedPtr current_vertex = nullptr;
+            for (auto& vertex : result.path) {
+                if (current_vertex == nullptr) {
+                    current_vertex = vertex;
+                    continue;
+                }
+
+                SearchVertex::SharedPtr next_vertex = vertex;
+
+                auto roadmap_darts = getRoadmapDarts(current_vertex, next_vertex);
+
+                // Publish the voxels once
+                publishSweptVoxels(roadmap_darts);
+                publishPositions(roadmap_darts);
+                current_vertex = vertex;
+            }
+        }
+    }
+
+    void publishPositions(const std::vector<RoadmapDart::SharedPtr>& darts, bool publish_once = false) {
+        // Publish the updated positions every 0.1 seconds
+        auto positions_msg = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>());
+        positions_msg->height = 1;
+        positions_msg->width = config->robots.size();
+        positions_msg->points.resize(config->robots.size());
+
+        size_t num_robots_moving = config->robots.size();
+        float t = 0;
+        while (true) {
+            size_t robots_finished = 0;
+            for (size_t i = 0; i < config->robots.size(); i++) {
+                auto roadmap = config->robots[i]->roadmap;
+                auto dart = darts[i];
+
+                Point start_position = dart->getStartState()->getPosition();
+                Point end_position = dart->getEndState()->getPosition();
+
+                float distance = start_position.distance(end_position);
+
+                // Interpolate the current position based on the speed and time t
+                float progress = t / (distance / DRONE_SPEED);
+                if (progress > 1) {
+                    progress = 1;
+                    robots_finished++;
+                }
+
+                Point current_position = start_position + (end_position - start_position) * progress;
+                positions_msg->points[i] = pcl::PointXYZ(current_position.x, current_position.y, current_position.z);
+            }
+
+            // Publish the point cloud
+            auto msg = sensor_msgs::msg::PointCloud2();
+            pcl::toROSMsg(*positions_msg, msg);
+            msg.header.frame_id = "map";
+            msg.header.stamp = this->now();
+            m_positionPublisher->publish(msg);
+
+            if (robots_finished == config->robots.size() || publish_once) {
+                break;
+            }
+
+            t += 0.05;
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+
+    void publishSweptVoxels(const std::vector<RoadmapDart::SharedPtr>& darts) {
+
+        // Print a _single_ voxel message for _all of the robots_
+
+        auto pcl_msg = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>());
+        pcl_msg->height = 1;
+        pcl_msg->width = 0;
+
+        spdlog::debug("Publishing voxels for {} robots", config->robots.size());
+        for (size_t i = 0; i < config->robots.size(); i++) {
+            auto roadmap = config->robots[i]->roadmap;
+            auto dart = darts[i];
+
+            auto voxel = dart->voxel;
+            if (voxel == nullptr) {
+                voxel = config->robots[i]->getSweptVoxel(dart);
+            }
+
+            PointCloudVoxel::SharedPtr cloud = std::dynamic_pointer_cast<PointCloudVoxel>(voxel);
+            spdlog::info("Publishing voxel for robot {} with {} points", i, cloud->m_points.size());
+
+            pcl_msg->width += cloud->m_points.size();
+            pcl_msg->points.reserve(cloud->m_points.size());
+
+            for (std::size_t i = 0; i < cloud->m_points.size(); ++i) {
+                pcl_msg->points.push_back(
+                    pcl::PointXYZ(cloud->m_points[i].x, cloud->m_points[i].y, cloud->m_points[i].z));
+            }
+        }
+
+        auto msg = sensor_msgs::msg::PointCloud2();
+        pcl::toROSMsg(*pcl_msg, msg);
+        msg.header.frame_id = "map";
+        msg.header.stamp = this->now();
+        spdlog::info("Publishing voxel with {}, {} points", msg.data.size(), pcl_msg->points.size());
+        m_voxelPublisher->publish(msg);
+    }
+
+    const SolverResult result;
+    const SolverConfig::SharedPtr config;
+    rclcpp::Publisher<PointCloud2>::SharedPtr m_voxelPublisher;
+    rclcpp::Publisher<PointCloud2>::SharedPtr m_positionPublisher;
+};
 
 struct SolverCLIOptions {
     std::string configuration_file = "";
@@ -68,6 +171,8 @@ struct SolverCLIOptions {
 
 int main(int argc, char** argv) {
     CLI::App app{"gRRT Player"};
+
+    rclcpp::init(argc, argv);
 
     SolverCLIOptions options;
 
@@ -105,6 +210,8 @@ int main(int argc, char** argv) {
     SolverResult solution;
     Result result = SolverConfigParser::parseSolution(options.solution_file, solution);
 
+    std::shared_ptr<Publisher> publisher = std::make_shared<Publisher>(solution, config);
+
     if (options.voxel != 0) {
         spdlog::info("Visualizing voxel {}", options.voxel);
 
@@ -116,7 +223,23 @@ int main(int argc, char** argv) {
         const auto start_vertex = solution.path[options.voxel - 1];
         const auto end_vertex = solution.path[options.voxel];
 
-        publishSweptVoxels(start_vertex, end_vertex);
+        auto roadmap_darts = publisher->getRoadmapDarts(start_vertex, end_vertex);
+
+        while (true) {
+            auto thread = std::thread([&]() {
+                while (true) {
+                    publisher->publishPositions(roadmap_darts, true);
+                    publisher->publishSweptVoxels(roadmap_darts);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                }
+            });
+
+            rclcpp::spin(publisher);
+        }
+        publisher->publishSweptVoxels(roadmap_darts);
+        rclcpp::spin(publisher);
+    } else {
+        publisher->playSolution(solution, config);
     }
 
     return 0;

@@ -26,8 +26,17 @@ namespace grrt {
 
         bool contains(const Point& point) const override;
 
+<<<<<<< HEAD
         const size_t num_points = 0;
         float* points = nullptr;
+=======
+        ~PointCloudVoxelGPU() {
+            // cudaError_t err = cudaFree(points);
+            // if (err != cudaSuccess) {
+            //     throw std::runtime_error("Failed to free points memory for point cloud voxel gpu");
+            // }
+        }
+>>>>>>> f1fa55f1de2ad0b4d253a9d5c24b0a4c4ad00c4f
 
        private:
         const float m_radius = PCL_VOXEL_RADIUS;
