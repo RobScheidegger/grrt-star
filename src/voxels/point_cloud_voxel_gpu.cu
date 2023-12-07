@@ -62,21 +62,21 @@ __global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_
 PointCloudVoxelGPU::PointCloudVoxelGPU(const size_t num_points) : num_points(num_points) {
     cudaError_t err = cudaHostAlloc(&points, num_points * sizeof(Point), cudaHostAllocDefault);
     if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to allocate memory for point cloud voxel");
+        printf("Failed to allocate memory for point cloud voxel: %s", cudaGetErrorString(err));
     }
 }
 
 PointCloudVoxelGPU::~PointCloudVoxelGPU(){
     cudaError_t err = cudaFreeHost(points);
     if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to free points memory for point cloud voxel gpu");
+        printf("Failed to free points memory for point cloud voxel gpu: %s", cudaGetErrorString(err));
     }
 }
 
 
 void PointCloudVoxelGPU::addPoint(const Point& point) {
     if (this->current_num_points >= this->num_points) {
-        throw std::runtime_error("Point cloud voxel GPU is full");
+        printf("Point cloud voxel GPU is full");
     }
     this->points[this->current_num_points] = point.x;
     this->points[this->current_num_points + 1] = point.y;
@@ -101,7 +101,7 @@ bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2)
 
     cudaError_t err = cudaHostAlloc(&bool_sum, num_blocks_pcv1 * WARP_SIZE * sizeof(float), cudaHostAllocDefault);
     if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to allocate memory for bool_sum");
+        printf("Failed to allocate memory for bool_sum");
     }
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -119,7 +119,7 @@ bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2)
 
     err = cudaFreeHost(bool_sum);
     if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to free bool_sum for point cloud voxel gpu");
+        printf("Failed to free bool_sum for point cloud voxel gpu");
     }
 
     return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
