@@ -36,6 +36,12 @@ SolverResult Solver::tracePath(const SearchTree::SharedPtr& searchTree, const Se
         result.cost += parent_dart->cost;
         current = parent_dart->head;
     }
+
+    // TEST: Check that none of the things are nullptr
+    for (const auto& vertex : result.path) {
+        assert(vertex != nullptr);
+    }
+
     return result;
 }
 
