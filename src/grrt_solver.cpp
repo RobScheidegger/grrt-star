@@ -34,6 +34,14 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    spdlog::info("Loading configuration file: {}", options.configuration_file);
+    SolverConfig::SharedPtr config = SolverConfigParser::parse(options.configuration_file);
+
+    if (config == nullptr) {
+        spdlog::error("Failed to parse configuration file");
+        return 1;
+    }
+
     int mpi_size = -1;
     int mpi_rank = -1;
 
@@ -43,20 +51,21 @@ int main(int argc, char** argv) {
         MPI_Comm_rank(MPI_COMM_WORLD, &mpi_size);
         MPI_Comm_size(MPI_COMM_WORLD, &mpi_rank);
         spdlog::info("MPI rank {} of {}", mpi_rank, mpi_size);
-    }
-
-    spdlog::info("Loading configuration file: {}", options.configuration_file);
-    SolverConfig::SharedPtr config = SolverConfigParser::parse(options.configuration_file);
-
-    if (config == nullptr) {
-        spdlog::error("Failed to parse configuration file");
-        return 1;
+        config->useMPI = true;
+        config->mpiSize = mpi_size;
+        config->mpiRank = mpi_rank;
     }
 
     spdlog::info("Configuration file loaded with {} roadmaps, {} robots, and {} problems", config->roadmaps.size(),
                  config->robots.size(), config->problems.size());
 
     Solver::SharedPtr solver = std::make_shared<Solver>(config);
+
+    if (options.useMPI && mpi_rank != 0) {
+        solver->launchMPIWorker();
+        MPI_Finalize();
+        return 0;
+    }
 
     auto solutions = solver->solve();
     for (const auto& [solution_name, solution] : *solutions) {
@@ -67,6 +76,10 @@ int main(int argc, char** argv) {
         SolverConfigParser::printSolution(solutionFile, config, solution);
 
         spdlog::info("Graph Points Considered: {}", solver->m_pointsConsidered);
+    }
+
+    if (options.useMPI) {
+        MPI_Finalize();
     }
 
     return 0;

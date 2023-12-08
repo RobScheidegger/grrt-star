@@ -22,5 +22,7 @@ namespace grrt {
 
         RobotFactory::SharedPtr robotFactory;
         bool useMPI = false;
+        int mpiSize = 0;
+        int mpiRank = 0;
     };
 }  // namespace grrt
