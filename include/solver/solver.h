@@ -26,18 +26,19 @@ namespace grrt {
 
         SearchVertex::SharedPtr distanceOracle(const SearchVertex::SharedPtr& nearVertex,
                                                const SearchVertex::SharedPtr& randomVertex,
-                                               const SearchVertex::SharedPtr& goalVertex) const;
+                                               const SearchVertex::SharedPtr& goalVertex);
 
         SearchVertex::SharedPtr distanceOracleMPI(const SearchVertex::SharedPtr& nearVertex,
-                                                  const SearchVertex::SharedPtr& goalVertex) const;
+                                                  const SearchVertex::SharedPtr& goalVertex);
 
         void launchMPIWorker();
+
+        size_t m_pointsConsidered = 0;
 
        private:
         const SolverConfig::SharedPtr m_config;
         SearchGraph::SharedPtr m_searchGraph;
         VoxelManager::SharedPtr m_voxelManager;
-        size_t m_pointsConsidered = 0;
 
         SolverResult::SharedPtr solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken);
 
@@ -49,6 +50,8 @@ namespace grrt {
                                           const SearchVertex::SharedPtr& goal) const;
 
         SearchVertex::SharedPtr sampleAdjacentCollisionFreeVertex(const SearchVertex::SharedPtr& nearVertex,
-                                                                  const SearchVertex::SharedPtr& goalVertex) const;
+                                                                  const SearchVertex::SharedPtr& goalVertex);
+
+        bool checkCollisionFreeDarts(const std::vector<RoadmapDart::SharedPtr> darts) const;
     };
 }  // namespace grrt

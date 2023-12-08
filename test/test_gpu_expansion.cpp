@@ -30,8 +30,8 @@ TEST(SolverExpansionGPU, TestGPURRTExpansion1) {
     auto d1 = roadmap->addDart(v1, v2);
     auto d2 = roadmap->addDart(v2, v1);
 
-    DroneGPU drone1(1, "Drone 1", roadmap);
-    DroneGPU drone2(2, "Drone 2", roadmap);
+    DroneGPU drone1(0, "Drone 1", roadmap);
+    DroneGPU drone2(1, "Drone 2", roadmap);
 
     auto voxel1 = drone1.getSweptVoxel(d1);
     auto voxel2 = drone2.getSweptVoxel(d2);
@@ -41,8 +41,8 @@ TEST(SolverExpansionGPU, TestGPURRTExpansion1) {
 
     SolverConfig::SharedPtr config = std::make_shared<SolverConfig>();
     config->roadmaps["Test Drone Roadmap"] = roadmap;
-    config->robots.push_back(std::make_shared<DroneGPU>(1, "Drone 1", roadmap));
-    config->robots.push_back(std::make_shared<DroneGPU>(2, "Drone 2", roadmap));
+    config->robots.push_back(std::make_shared<DroneGPU>(0, "Drone 1", roadmap));
+    config->robots.push_back(std::make_shared<DroneGPU>(1, "Drone 2", roadmap));
     config->problems.push_back(SolverProblem("Test Drone Roadmap", start_vertex, end_vertex));
     config->robotFactory = factory;
 
@@ -74,13 +74,13 @@ TEST(SolverExpansionGPU, TestGPURRTExpansion2) {
     roadmap->addDart(left, origin);
     roadmap->addDart(origin, left);
 
-    DroneGPU drone1(1, "Drone 1", roadmap);
-    DroneGPU drone2(2, "Drone 2", roadmap);
+    DroneGPU drone1(0, "Drone 1", roadmap);
+    DroneGPU drone2(1, "Drone 2", roadmap);
 
     SolverConfig::SharedPtr config = std::make_shared<SolverConfig>();
     config->roadmaps["Test Drone Roadmap"] = roadmap;
-    config->robots.push_back(std::make_shared<DroneGPU>(1, "Drone 1", roadmap));
-    config->robots.push_back(std::make_shared<DroneGPU>(2, "Drone 2", roadmap));
+    config->robots.push_back(std::make_shared<DroneGPU>(0, "Drone 1", roadmap));
+    config->robots.push_back(std::make_shared<DroneGPU>(1, "Drone 2", roadmap));
     config->problems.push_back(SolverProblem("Test Drone Roadmap", start_vertex, end_vertex));
     config->robotFactory = factory;
 

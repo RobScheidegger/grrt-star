@@ -144,7 +144,7 @@ void Solver::computeVoxels() {
 #define ORACLE_VERTEX_ATTEMPTS 10
 
 SearchVertex::SharedPtr Solver::distanceOracleMPI(const SearchVertex::SharedPtr& nearVertex,
-                                                  const SearchVertex::SharedPtr& goalVertex) const {
+                                                  const SearchVertex::SharedPtr& goalVertex) {
     // This is the MPI main node for the computation.
 
     // Broadcast out the currrent near vertex and goal vertex to all other nodes.
@@ -160,7 +160,7 @@ SearchVertex::SharedPtr Solver::distanceOracleMPI(const SearchVertex::SharedPtr&
 
 SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& nearVertex,
                                                const SearchVertex::SharedPtr& randomVertex,
-                                               const SearchVertex::SharedPtr& goalVertex) const {
+                                               const SearchVertex::SharedPtr& goalVertex) {
 
     // Find the vertex in the graph that minimizes the angle between nearVertex and randomVertex.
     // This is the vertex that is closest to randomVertex in the graph.
@@ -171,19 +171,39 @@ SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& ne
 
     size_t attempts = 0;
     while (attempts++ < ORACLE_VERTEX_ATTEMPTS) {
-        auto newVertex = sampleAdjacentCollisionFreeVertex(nearVertex, goalVertex);
-        if (newVertex == nullptr) {
-            continue;
-        }
+        size_t attempts = 0;
+        while (attempts++ < ORACLE_VERTEX_ATTEMPTS) {
+            auto newVertex = m_searchGraph->sampleAdjacentVertex(nearVertex);
+            if (newVertex == nullptr) {
+                // Help
+                spdlog::warn("sampleAdjacentVertex returned nullptr");
+                continue;
+            }
 
-        return newVertex;
+            // Check that the edge between the near vertex and new vertex is collision free.
+            auto newDart = std::make_shared<SearchDart>(nearVertex, newVertex, 1);
+            auto darts = m_searchGraph->getRoadmapDarts(nearVertex, newVertex);
+            spdlog::info("Checking dart {}", newDart->toString());
+            auto start = std::chrono::high_resolution_clock::now();
+            bool collisionFree = checkCollisionFreeDarts(darts);
+            auto end = std::chrono::high_resolution_clock::now();
+            auto collision_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            spdlog::trace("Collision check took {} ms", collision_time);
+            spdlog::info("Checked dart {}", newDart->toString());
+
+            if (collisionFree) {
+                return newVertex;
+            }
+        }
     }
 
     return nullptr;
 };
 
 SearchVertex::SharedPtr Solver::sampleAdjacentCollisionFreeVertex(const SearchVertex::SharedPtr& nearVertex,
-                                                                  const SearchVertex::SharedPtr& goalVertex) const {
+                                                                  const SearchVertex::SharedPtr& goalVertex) {
+
+    m_pointsConsidered += 1;
     // Generate a random permutation of the robots
     std::vector<IRobot::SharedPtr> robots = m_config->robots;
     std::random_shuffle(robots.begin(), robots.end());
@@ -209,17 +229,19 @@ SearchVertex::SharedPtr Solver::sampleAdjacentCollisionFreeVertex(const SearchVe
             RoadmapDart::SharedPtr currentDart = robot->roadmap->getDart(
                 robot->roadmap->vertices[current_roadmap_state], robot->roadmap->vertices[current_roadmap_state]);
 
-            for (const auto& dart : currentDarts) {
-                if (m_voxelManager->intersect(currentDart->voxel, dart->voxel)) {
-                    collisionFree = false;
-                    break;
+            if (currentDart != nullptr) {
+                for (const auto& dart : currentDarts) {
+                    if (m_voxelManager->intersect(currentDart->voxel, dart->voxel)) {
+                        collisionFree = false;
+                        break;
+                    }
                 }
-            }
 
-            if (collisionFree) {
-                currentDarts.push_back(currentDart);
-                roadmapStateIds[id] = current_roadmap_state;
-                continue;
+                if (collisionFree) {
+                    currentDarts.push_back(currentDart);
+                    roadmapStateIds[id] = current_roadmap_state;
+                    continue;
+                }
             }
         }
 
@@ -247,6 +269,24 @@ SearchVertex::SharedPtr Solver::sampleAdjacentCollisionFreeVertex(const SearchVe
     }
     return nullptr;
 }
+
+bool Solver::checkCollisionFreeDarts(const std::vector<RoadmapDart::SharedPtr> darts) const {
+
+    bool collisionFree = true;
+#pragma omp parallel for
+    for (int i = 0; i < darts.size(); i++) {
+        if (!collisionFree) {
+            continue;
+        }
+        for (int j = i + 1; j < darts.size(); j++) {
+            if (m_voxelManager->intersect(darts[i]->voxel, darts[j]->voxel)) {
+                collisionFree = false;
+            }
+        }
+    }
+
+    return collisionFree;
+};
 
 void Solver::launchMPIWorker() {
     // TODO: Rob + Hammad
