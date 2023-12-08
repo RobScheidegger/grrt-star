@@ -54,6 +54,7 @@ ENV PATH=$PATH:$CUDA_HOME/bin
 RUN apt install ros-$ROS_DISTRO-pcl-conversions -y
 RUN apt install ros-$ROS_DISTRO-sensor-msgs -y
 RUN apt install ros-$ROS_DISTRO-pcl-msgs -y
+RUN apt remove mpich -y
 
 # Setup directory
 RUN mkdir -p /workplace

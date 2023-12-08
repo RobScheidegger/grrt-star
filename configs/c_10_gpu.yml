@@ -238,4 +238,4 @@ robots:
   roadmap: roadmap
   type: drone
 voxels:
-  type: PCL
+  type: PCL_GPU

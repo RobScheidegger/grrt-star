@@ -48,8 +48,8 @@ int main(int argc, char** argv) {
     if (options.useMPI) {
         spdlog::info("Using MPI");
         MPI_Init(&argc, &argv);
-        MPI_Comm_rank(MPI_COMM_WORLD, &mpi_size);
-        MPI_Comm_size(MPI_COMM_WORLD, &mpi_rank);
+        MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
         spdlog::info("MPI rank {} of {}", mpi_rank, mpi_size);
         config->useMPI = true;
         config->mpiSize = mpi_size;
