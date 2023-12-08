@@ -108,12 +108,16 @@ SolverSolutions Solver::solve() {
 
     auto start = std::chrono::high_resolution_clock::now();
     this->computeVoxels();
+
     for (const auto& roadmap : m_searchGraph->roadmaps) {
         roadmap->computeAllPairsShortestPath();
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto preprocess_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     spdlog::info("Preprocessing took {} ms", preprocess_time);
+
+    if (m_config->preprocessOnly)
+        return solutions;
 
     // set cancellation token to true in 10 seconds
     for (const auto& problem : m_config->problems) {
@@ -128,7 +132,7 @@ SolverSolutions Solver::solve() {
         auto end = std::chrono::high_resolution_clock::now();
         auto solve_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
-        spdlog::info("Solved problem {} in {} s", problem.name, solve_time);
+        spdlog::info("Solved problem {} in {} s with path size {}", problem.name, solve_time, result->path.size());
 
         solutions->insert(std::make_pair(problem.name, result));
     }
@@ -139,6 +143,7 @@ SolverSolutions Solver::solve() {
 void Solver::computeVoxels() {
     // make a set of roadmaps
     std::unordered_set<Roadmap::SharedPtr> roadmaps;
+#pragma omp parallel for
     for (auto& robot : m_config->robots) {
         if (!roadmaps.count(robot->roadmap)) {
             for (auto& dart : robot->roadmap->darts) {

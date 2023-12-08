@@ -96,6 +96,12 @@ if args.type == "circle_rotate":
                 "states": [
                     {
                         "name": "state_{}".format(i),
+                        "to": [
+                            "state_{}".format((i + 1) % args.n),
+                            "state_{}".format(i),
+                            "state_{}".format((i - 1) % args.n),
+                            "state_{}".format((i + args.n) % (2 * args.n)),
+                        ],
                         "x": circle_positions[i][0],
                         "y": circle_positions[i][1],
                         "z": circle_positions[i][2],

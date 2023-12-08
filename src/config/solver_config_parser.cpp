@@ -477,5 +477,8 @@ Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResu
         solution->path.push_back(std::make_shared<SearchVertex>(roadmapStates));
     }
 
+    // Reverse the path so that it is in the correct order.
+    std::reverse(solution->path.begin(), solution->path.end());
+
     return Result::Ok();
 }
