@@ -16,10 +16,16 @@ SearchVertex::SharedPtr SearchGraph::getRandomVertex() const {
     return std::make_shared<SearchVertex>(roadmapStates);
 }
 
-SearchVertex::SharedPtr SearchGraph::sampleAdjacentVertex(const SearchVertex::SharedPtr& vertex) const {
+SearchVertex::SharedPtr SearchGraph::sampleAdjacentVertex(const SearchVertex::SharedPtr& vertex,
+                                                          const std::vector<bool>& mask) const {
     auto adjacent_vertices_id = std::vector<RoadmapVertexId>();
 
     for (int i = 0; i < roadmaps.size(); i++) {
+        if (!mask[i]) {
+            adjacent_vertices_id.push_back(vertex->roadmapStates[i]);
+            continue;
+        }
+
         auto roadmap = roadmaps[i];
         auto darts = roadmap->getAdjacentDarts(roadmap->vertices[vertex->roadmapStates[i]]);
         // randomly select a dart

@@ -37,8 +37,10 @@ namespace grrt {
 
        private:
         const SolverConfig::SharedPtr m_config;
+        size_t m_robotsToMove;
         SearchGraph::SharedPtr m_searchGraph;
         VoxelManager::SharedPtr m_voxelManager;
+        std::atomic_bool m_cancelled = false;
 
         SolverResult::SharedPtr solveProblem(const SolverProblem& problem, std::atomic_bool& cancellationToken);
 
