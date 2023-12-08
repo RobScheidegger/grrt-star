@@ -5,6 +5,7 @@
 #include "graphs/search_vertex.h"
 #include "pkgs/rapidyaml.hpp"
 
+#include <mpi.h>
 #include <unordered_set>
 
 #define ORACLE_VERTEX_ATTEMPTS 10
@@ -168,17 +169,47 @@ inline std::vector<bool> generateRandomRobotMask(const std::vector<IRobot::Share
 
 SearchVertex::SharedPtr Solver::distanceOracleMPI(const SearchVertex::SharedPtr& nearVertex,
                                                   const SearchVertex::SharedPtr& goalVertex) {
+    assert(nearVertex->roadmapStates.size() == goalVertex->roadmapStates.size());
+    const int num_vertex_states = nearVertex->roadmapStates.size();
+
     // This is the MPI main node for the computation.
-
     // Broadcast out the currrent near vertex and goal vertex to all other nodes.
+    uint64_t* nearVertexData = new uint64_t[num_vertex_states];
+    uint64_t* goalVertexData = new uint64_t[num_vertex_states];
+    for (int i = 0; i < num_vertex_states; i++) {
+        nearVertexData[i] = nearVertex->roadmapStates[i];
+        goalVertexData[i] = goalVertex->roadmapStates[i];
+    }
 
-    // Each node will sample a new vertex and check for collisions.
+    MPI_Bcast(nearVertexData, num_vertex_states, MPI_UINT64_T, 0, MPI_COMM_WORLD);
+    MPI_Bcast(goalVertexData, num_vertex_states, MPI_UINT64_T, 0, MPI_COMM_WORLD);
+
+    spdlog::info("Broadcasted near vertex and goal vertex to all nodes");
 
     // Each node will send back the vertex that is collision free.
+    std::vector<uint64_t> newVertexData(num_vertex_states);
+    std::vector<SearchVertex::SharedPtr> newVertices(m_config->mpiSize);
+    newVertices[0] = nullptr;
+    spdlog::info("Waiting for new vertex from other nodes");
+    for (int i = 1; i < m_config->mpiSize; i++) {
+        MPI_Recv(newVertexData.data(), num_vertex_states, MPI_UINT64_T, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        newVertices[i] = std::make_shared<SearchVertex>(newVertexData);
+    }
+    spdlog::info("Finished waiting for new vertex from other nodes");
 
-    // The main node will receive all of the vertices and return the one that is closest to the goal vertex.
+    // TODO: The main node will receive all of the vertices and return the one that is closest to the goal vertex.
+    // for now just return the first non-null vertex
+    for (int i = 0; i < m_config->mpiSize; i++) {
+        if (newVertices[i] != nullptr) {
+            return newVertices[i];
+        }
+    }
 
-    return nullptr;  // TODO
+    free(nearVertexData);
+    free(goalVertexData);
+
+    spdlog::warn("distanceOracleMPI failed to find a new vertex across {} compute nodes", m_config->mpiSize - 1);
+    return nullptr;
 }
 
 SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& nearVertex,
@@ -310,4 +341,26 @@ bool Solver::checkCollisionFreeDarts(const std::vector<RoadmapDart::SharedPtr> d
 
 void Solver::launchMPIWorker() {
     // TODO: Rob + Hammad
+
+    while (true) {
+        const int num_vertex_states = m_config->robots.size();
+
+        std::vector<uint64_t> nearVertexData(num_vertex_states);
+        std::vector<uint64_t> goalVertexData(num_vertex_states);
+        MPI_Recv(nearVertexData.data(), num_vertex_states, MPI_UINT64_T, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(goalVertexData.data(), num_vertex_states, MPI_UINT64_T, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        SearchVertex::SharedPtr nearVertex = std::make_shared<SearchVertex>(nearVertexData);
+        SearchVertex::SharedPtr goalVertex = std::make_shared<SearchVertex>(goalVertexData);
+
+        std::vector<uint64_t> newVertexData(num_vertex_states);
+        for (int i = 0; i < ORACLE_VERTEX_ATTEMPTS; i++) {
+            SearchVertex::SharedPtr newVertex = sampleAdjacentCollisionFreeVertex(nearVertex, goalVertex);
+            if (newVertex != nullptr) {
+                for (int i = 0; i < num_vertex_states; i++) {
+                    newVertexData[i] = newVertex->roadmapStates[i];
+                }
+                MPI_Send(newVertexData.data(), num_vertex_states, MPI_UINT64_T, 0, 0, MPI_COMM_WORLD);
+            }
+        }
+    }
 }

@@ -31,6 +31,9 @@ static Result parseVoxelType(const std::string& voxelTypeStr, VoxelType& voxelTy
     if (voxelTypeStr == "PCL") {
         voxelType = VoxelType::POINT_CLOUD;
         return Result::Ok();
+    } else if (voxelTypeStr == "PCL_GPU") {
+        voxelType = VoxelType::POINT_CLOUD_GPU;
+        return Result::Ok();
     }
     return Result::Error("Unknown voxel type: " + voxelTypeStr);
 }

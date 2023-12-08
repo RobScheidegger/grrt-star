@@ -78,6 +78,8 @@ namespace grrt {
 
             dart->voxel = cloud;
 
+            assert(cloud->m_points.size() != 0);
+
             cloud->start_point = start_point;
             cloud->end_point = end_point;
 

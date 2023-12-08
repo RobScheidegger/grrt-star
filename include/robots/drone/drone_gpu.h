@@ -9,33 +9,17 @@
 #define VOXEL_SWEEP_ERROR 0.001
 
 namespace grrt {
-    class DroneGPUState : public RobotState {
-       public:
-        typedef std::shared_ptr<DroneGPUState> SharedPtr;
-
-        DroneGPUState(const Point& point, const float radius) : position(point), radius(radius) {}
-
-        std::string toString() const override { return "DroneGPUState: " + position.toString(); }
-
-        double distance(const RobotState::SharedPtr& other) const override {
-            DroneGPUState::SharedPtr droneGPUState = std::dynamic_pointer_cast<DroneGPUState>(other);
-            return position.distance(droneGPUState->position);
-        }
-
-        Point getPosition() const override { return position; }
-
-        Point position;
-        float radius;
-    };
-
     class DroneGPU : public IRobot {
        public:
         DroneGPU(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap)
             : IRobot(id, name, roadmap) {}
 
         Voxel::SharedPtr getSweptVoxel(const RoadmapDart::SharedPtr& dart) override {
-            DroneGPUState::SharedPtr start_state = std::dynamic_pointer_cast<DroneGPUState>(dart->getStartState());
-            DroneGPUState::SharedPtr end_state = std::dynamic_pointer_cast<DroneGPUState>(dart->getEndState());
+            DroneState::SharedPtr start_state = std::dynamic_pointer_cast<DroneState>(dart->getStartState());
+            DroneState::SharedPtr end_state = std::dynamic_pointer_cast<DroneState>(dart->getEndState());
+
+            assert(start_state != nullptr);
+            assert(end_state != nullptr);
 
             Point start_point = start_state->position;
             Point end_point = end_state->position;
@@ -117,8 +101,8 @@ namespace grrt {
         Voxel::SharedPtr getVoxel(const RoadmapDart::SharedPtr& dart, const double time) override {
             PointCloudVoxelGPU::SharedPtr cloud = std::make_shared<PointCloudVoxelGPU>(0);
 
-            DroneGPUState::SharedPtr start_state = std::dynamic_pointer_cast<DroneGPUState>(dart->getStartState());
-            DroneGPUState::SharedPtr end_state = std::dynamic_pointer_cast<DroneGPUState>(dart->getEndState());
+            DroneState::SharedPtr start_state = std::dynamic_pointer_cast<DroneState>(dart->getStartState());
+            DroneState::SharedPtr end_state = std::dynamic_pointer_cast<DroneState>(dart->getEndState());
 
             return cloud;
         }
