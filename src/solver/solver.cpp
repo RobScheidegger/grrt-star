@@ -368,8 +368,6 @@ SearchVertex::SharedPtr Solver::distanceOracleMPI(const SearchVertex::SharedPtr&
     }
     spdlog::info("Finished waiting for new vertex from other nodes");
 
-    // TODO: The main node will receive all of the vertices and return the one that is closest to the goal vertex.
-    // for now just return the first non-null vertex
     m_pointsConsidered += m_config->mpiSize;
     for (int i = 0; i < m_config->mpiSize; i++) {
         if (newVertices[i] != nullptr) {
