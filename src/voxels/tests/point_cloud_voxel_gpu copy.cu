@@ -122,7 +122,7 @@ PointCloudVoxelGPU::~PointCloudVoxelGPU(){
 
 void PointCloudVoxelGPU::addPoint(const Point& point) {
     if (this->current_num_points >= this->num_points) {
-        printf("Point cloud voxel GPU is full\n");
+        // printf("Point cloud voxel GPU is full: %d\n", num_points);
         return;
     }
     this->points[this->current_num_points] = point.x;

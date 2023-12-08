@@ -50,9 +50,13 @@ namespace grrt {
             // the +1 is beccause a voxel is also generated at swept_distance = 0
 
             // int exptected_num_iters = (sweep_length != 0) ? int(sweep_length / VOXEL_SWEEP_STEP_SIZE) : 1;
-            int exptected_num_iters = int(sweep_length / VOXEL_SWEEP_STEP_SIZE) + 1;
+            int exptected_num_iters = int((sweep_length + VOXEL_SWEEP_ERROR) / VOXEL_SWEEP_STEP_SIZE) + 1;
             // 0, 5, 10, 15
             // 15 / 5 == 3
+
+            printf("expected_num_iters: %f\n", sweep_length);
+            printf("expected_num_iters: %f\n", VOXEL_SWEEP_STEP_SIZE);
+            printf("expected_num_iters: %d\n", exptected_num_iters);
 
             // if (std::fmod(sweep_length, VOXEL_SWEEP_STEP_SIZE) == 0) {
             //     exptected_num_iters += 1;
@@ -73,6 +77,7 @@ namespace grrt {
             int thing = 0;
             for (float swept_distance = 0; swept_distance <= sweep_length + VOXEL_SWEEP_ERROR;
                  swept_distance += VOXEL_SWEEP_STEP_SIZE) {
+                // printf("swept_distance: %f\n", swept_distance);
                 float a = swept_distance;
                 float b = sweep_length - swept_distance;
 
@@ -92,12 +97,12 @@ namespace grrt {
                     float z = sin(theta) * radius;
                     cloud->addPoint(Point(x * start_state->radius + offset.x, y * start_state->radius + offset.y,
                                           z * start_state->radius + offset.z));
-                    thing += 3;
                 }
+                thing += 1;
             }
 
-            if ((exptected_num_iters * 3) != thing) {
-                printf("mismatch!!! %d, %d\n", (exptected_num_iters * 3), thing);
+            if (exptected_num_iters != thing) {
+                printf("mismatch!!! %d, %d\n", exptected_num_iters, thing);
             }
 
             // printf("thing: %d\n", thing);

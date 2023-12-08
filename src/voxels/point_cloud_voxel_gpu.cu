@@ -81,8 +81,7 @@ __global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_
 
         // printf("dist: %f\n", dist);
 
-        // if (dist < 0.5) {
-        // if (pcl_v1_i > 58000) {
+        // if (dist < 0.1) {
         //     printf("Point: (%f, %f, %f) at %d and Point: (%f, %f, %f) at %d with dist: %f\n", pcl_voxel_1_pnts[pcl_v1_i], pcl_voxel_1_pnts[pcl_v1_i + 1], pcl_voxel_1_pnts[pcl_v1_i + 2], pcl_v1_i, pcl_voxel_2_pnts[pcl_v2_i], pcl_voxel_2_pnts[pcl_v2_i + 1], pcl_voxel_2_pnts[pcl_v2_i + 2], pcl_v2_i, dist);
         // }
 
@@ -129,7 +128,7 @@ PointCloudVoxelGPU::~PointCloudVoxelGPU(){
 
 void PointCloudVoxelGPU::addPoint(const Point& point) {
     if (this->current_num_points >= this->num_points) {
-        printf("Point cloud voxel GPU is full\n");
+        printf("Point cloud voxel GPU is full: %lu\n", num_points);
         return;
     }
     this->points[this->current_num_points] = point.x;
@@ -150,11 +149,11 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
 
     float *bool_sum;
 
-    // printf("start_point 1: (%f, %f, %f)\n", pcl_voxel_1->start_point.x, pcl_voxel_1->start_point.y, pcl_voxel_1->start_point.z);
-    // printf("end_point 1: (%f, %f, %f)\n", pcl_voxel_1->end_point.x, pcl_voxel_1->end_point.y, pcl_voxel_1->end_point.z);
+    printf("start_point 1: (%f, %f, %f)\n", pcl_voxel_1->start_point.x, pcl_voxel_1->start_point.y, pcl_voxel_1->start_point.z);
+    printf("end_point 1: (%f, %f, %f)\n", pcl_voxel_1->end_point.x, pcl_voxel_1->end_point.y, pcl_voxel_1->end_point.z);
 
-    // printf("start_point 2: (%f, %f, %f)\n", pcl_voxel_2->start_point.x, pcl_voxel_2->start_point.y, pcl_voxel_2->start_point.z);
-    // printf("end_point 2: (%f, %f, %f)\n", pcl_voxel_2->end_point.x, pcl_voxel_2->end_point.y, pcl_voxel_2->end_point.z);
+    printf("start_point 2: (%f, %f, %f)\n", pcl_voxel_2->start_point.x, pcl_voxel_2->start_point.y, pcl_voxel_2->start_point.z);
+    printf("end_point 2: (%f, %f, %f)\n", pcl_voxel_2->end_point.x, pcl_voxel_2->end_point.y, pcl_voxel_2->end_point.z);
 
     // Each MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD Points in pcl_voxel_1 will be worked on by a block, but the shuffle operation only occurs within a warp which is 32 threads aka 32 points (through 32 * 3 floats) in pcv1.
     // printf("blah: %lu\n", pcl_voxel_1->num_points);
