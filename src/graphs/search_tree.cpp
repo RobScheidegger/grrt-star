@@ -19,7 +19,7 @@ SearchVertex::SharedPtr SearchTree::getNearestPoint(const SearchVertex::SharedPt
             vertex_distance = std::max(vertex_distance, distance);
         }
 
-        if (vertex_distance < best_distance) {
+        if (vertex_distance <= best_distance) {
             best_distance = vertex_distance;
             best_vertex = treeVertex;
         }

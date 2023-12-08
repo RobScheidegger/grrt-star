@@ -21,9 +21,9 @@ namespace grrt {
         /// @brief Whether the problem was solved successfully.
         bool success;
         /// @brief Cost of the solution, if found.
-        double cost;
+        double cost = 0;
         /// @brief The time taken to solve the problem (in seconds).
-        double time;
+        double time = 0;
 
         static SolverResult::SharedPtr fail() { return std::make_shared<SolverResult>(false); }
     };

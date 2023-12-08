@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
         std::string solutionFileName = "solution_" + solution_name + ".yaml.sol";
         std::ofstream solutionFile(solutionFileName);
         SolverConfigParser::printSolution(solutionFile, config, solution);
+
+        spdlog::info("Graph Points Considered: {}", solver->m_pointsConsidered);
     }
 
     return 0;
