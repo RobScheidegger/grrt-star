@@ -189,8 +189,8 @@ TEST(PointCloudVoxelsGPU, TestNoCollisionAnother) {
     auto d1 = roadmap->addDart(v1_left, v1_right);
     auto d2 = roadmap->addDart(v2_left, v2_right);
 
-    DroneGPU drone1(1, "Drone 1", roadmap);
-    DroneGPU drone2(2, "Drone 2", roadmap);
+    DroneGPU drone1(0, "Drone 1", roadmap);
+    DroneGPU drone2(1, "Drone 2", roadmap);
 
     auto voxel1 = drone1.getSweptVoxel(d1);
     auto voxel2 = drone2.getSweptVoxel(d2);
@@ -225,8 +225,8 @@ TEST(PointCloudVoxelsGPU, TestNoCollisionAnotherHaha) {
     auto d1 = roadmap->addDart(v1_left, v1_right);
     auto d2 = roadmap->addDart(v2_left, v2_right);
 
-    DroneGPU drone1(1, "Drone 1", roadmap);
-    DroneGPU drone2(2, "Drone 2", roadmap);
+    DroneGPU drone1(0, "Drone 1", roadmap);
+    DroneGPU drone2(1, "Drone 2", roadmap);
 
     auto voxel1 = drone1.getSweptVoxel(d1);
     auto voxel2 = drone2.getSweptVoxel(d2);

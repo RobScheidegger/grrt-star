@@ -97,7 +97,8 @@ add_executable(grrt_solver
 target_link_libraries(grrt_solver
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
   PRIVATE ${MPI_CXX_LIBRARIES}
-  PRIVATE grrt)
+  PRIVATE grrt
+)
 
 add_executable(grrt_player
   src/grrt_player.cpp)
@@ -143,6 +144,7 @@ target_link_libraries(grrt_tests
   gtest_main
   grrt
   spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
+  ${MPI_CXX_LIBRARIES}
 )
 include(GoogleTest)
 gtest_discover_tests(grrt_tests)
