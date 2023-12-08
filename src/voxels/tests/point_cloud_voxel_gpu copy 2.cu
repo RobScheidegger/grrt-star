@@ -12,7 +12,6 @@
 #define MAX(a, b) (a < b ? b : a)
 #define CEIL(x, y) ((x + y - 1) / y)
 
-#define BOOL_SUM_MAX_SIZE 10000
 #define MAX_THREADS_PER_BLOCK 1024
 #define THREADS_PER_WARP 32
 #define WARPS_PER_BLOCK 32

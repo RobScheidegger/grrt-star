@@ -28,7 +28,7 @@ using namespace grrt;
 // TODO: siddharth: add cuda kernels
 
 // each thread works on 3 floats from pcl_voxel_1 and 3 floats from pcl_voxel_2
-__global__ void saxby_shuffle_single(float* pcl_voxel_1_pnts,  float* pcl_voxel_2_pnts, int pcl_voxel_1_count, int pcl_voxel_2_count, float* bool_sum, int bool_sum_size) {
+__global__ void intersect_shuffle(float* pcl_voxel_1_pnts,  float* pcl_voxel_2_pnts, int pcl_voxel_1_count, int pcl_voxel_2_count, int* bool_sum, int bool_sum_size) {
 
     int warp_id = threadIdx.x / THREADS_PER_WARP;
     int lane_id = threadIdx.x % THREADS_PER_WARP;
@@ -147,8 +147,6 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
     PointCloudVoxelGPU::SharedPtr pcl_voxel_1 = std::dynamic_pointer_cast<PointCloudVoxelGPU>(voxel_1);
     PointCloudVoxelGPU::SharedPtr pcl_voxel_2 = std::dynamic_pointer_cast<PointCloudVoxelGPU>(voxel_2);
 
-    float *bool_sum;
-
     // printf("start_point 1: (%f, %f, %f)\n", pcl_voxel_1->start_point.x, pcl_voxel_1->start_point.y, pcl_voxel_1->start_point.z);
     // printf("end_point 1: (%f, %f, %f)\n", pcl_voxel_1->end_point.x, pcl_voxel_1->end_point.y, pcl_voxel_1->end_point.z);
 
@@ -162,9 +160,8 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
     // int bool_sum_size = CEIL(pcl_voxel_1->num_points, (3 * MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD / WARP_SIZE));
     int bool_sum_size = num_blocks_pcv1 * WARP_SIZE;
 
-    cudaError_t err = cudaHostAlloc(&bool_sum, bool_sum_size * sizeof(float), cudaHostAllocDefault);
-    if (err != cudaSuccess) {
-        printf("Failed to allocate memory for bool_sum");
+    if (bool_sum_size > BOOL_SUM_MAX_SIZE) {
+        printf("bool_sum doesn't have any space for this intersection\n");
     }
 
     memset(bool_sum, 0, bool_sum_size * sizeof(float));
@@ -193,7 +190,7 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
     // printf("b: %d\n", num_blocks_pcv2);
 
     dim3 max_threads_per_block(MAX_THREADS_PER_BLOCK, 1, 1);
-    saxby_shuffle_single<<<num_blocks, max_threads_per_block>>>(pcl_voxel_1->points, pcl_voxel_2->points, pcl_voxel_1->num_points, pcl_voxel_2->num_points, bool_sum, bool_sum_size);
+    intersect_shuffle<<<num_blocks, max_threads_per_block>>>(pcl_voxel_1->points, pcl_voxel_2->points, pcl_voxel_1->num_points, pcl_voxel_2->num_points, bool_sum, bool_sum_size);
     cudaDeviceSynchronize();
 
     bool res = false;
@@ -212,13 +209,26 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
 
      auto end = std::chrono::high_resolution_clock::now();
 
-    err = cudaFreeHost(bool_sum);
-    if (err != cudaSuccess) {
-        printf("Failed to free bool_sum for point cloud voxel gpu\n");
-    }
-
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
     return res;
 
+}
+
+
+PointCloudVoxelGPUManager::PointCloudVoxelGPUManager() {
+    cudaError_t err = cudaHostAlloc(&bool_sum, BOOL_SUM_MAX_SIZE * sizeof(int), cudaHostAllocDefault);
+    if (err != cudaSuccess) {
+        printf("Failed to allocate memory for bool_sum: %s", cudaGetErrorString(err));
+    }
+}
+
+PointCloudVoxelGPUManager::~PointCloudVoxelGPUManager() {
+    if (bool_sum == nullptr) {
+        return;
+    }
+    cudaError_t err = cudaFreeHost(bool_sum);
+    if (err != cudaSuccess) {
+        printf("Failed to free bool_sum for point cloud voxel gpu\n");
+    }
 }

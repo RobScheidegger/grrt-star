@@ -51,6 +51,12 @@ namespace grrt
             // TODO
             return nullptr;
         }
+
+        int* bool_sum= nullptr;
+
+        PointCloudVoxelGPUManager();
+
+        ~PointCloudVoxelGPUManager();
     };
 
     // for the gpu variants, it will call the cuda kernel.
