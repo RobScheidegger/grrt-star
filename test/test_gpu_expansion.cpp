@@ -8,6 +8,7 @@
 
 #include "constants.h"
 #include "graphs/roadmap.h"
+#include "robots/drone/drone.hpp"
 #include "robots/drone/drone_gpu.h"
 #include "robots/robot_factory.h"
 #include "solver/solver.h"
@@ -21,8 +22,8 @@ TEST(SolverExpansionGPU, TestGPURRTExpansion1) {
 
     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
-    auto v1 = roadmap->addVertex("v1", std::make_shared<DroneGPUState>(Point(-1, 0, 0), 1.0));
-    auto v2 = roadmap->addVertex("v2", std::make_shared<DroneGPUState>(Point(1, 0, 0), 1.0));
+    auto v1 = roadmap->addVertex("v1", std::make_shared<DroneState>(Point(-1, 0, 0), 1.0));
+    auto v2 = roadmap->addVertex("v2", std::make_shared<DroneState>(Point(1, 0, 0), 1.0));
 
     auto start_vertex = std::make_shared<SearchVertex>(std::vector{v1->m_id, v2->m_id});
     auto end_vertex = std::make_shared<SearchVertex>(std::vector{v2->m_id, v1->m_id});
@@ -55,12 +56,12 @@ TEST(SolverExpansionGPU, TestGPURRTExpansion1) {
 TEST(SolverExpansionGPU, TestGPURRTExpansion2) {
     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
-    auto left = roadmap->addVertex("v1", std::make_shared<DroneGPUState>(Point(-10, 0, 0), 1.0));
-    auto right = roadmap->addVertex("v2", std::make_shared<DroneGPUState>(Point(10, 0, 0), 1.0));
-    auto top = roadmap->addVertex("v3", std::make_shared<DroneGPUState>(Point(0, 10, 0), 1.0));
-    auto top_right = roadmap->addVertex("v4", std::make_shared<DroneGPUState>(Point(5, 5, 0), 1.0));
-    auto top_left = roadmap->addVertex("v4", std::make_shared<DroneGPUState>(Point(-5, 5, 0), 1.0));
-    auto origin = roadmap->addVertex("v4", std::make_shared<DroneGPUState>(Point(0, 0, 0), 1.0));
+    auto left = roadmap->addVertex("v1", std::make_shared<DroneState>(Point(-10, 0, 0), 1.0));
+    auto right = roadmap->addVertex("v2", std::make_shared<DroneState>(Point(10, 0, 0), 1.0));
+    auto top = roadmap->addVertex("v3", std::make_shared<DroneState>(Point(0, 10, 0), 1.0));
+    auto top_right = roadmap->addVertex("v4", std::make_shared<DroneState>(Point(5, 5, 0), 1.0));
+    auto top_left = roadmap->addVertex("v4", std::make_shared<DroneState>(Point(-5, 5, 0), 1.0));
+    auto origin = roadmap->addVertex("v4", std::make_shared<DroneState>(Point(0, 0, 0), 1.0));
 
     auto start_vertex = std::make_shared<SearchVertex>(std::vector{left->m_id, right->m_id});
     auto end_vertex = std::make_shared<SearchVertex>(std::vector{right->m_id, left->m_id});

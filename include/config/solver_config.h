@@ -24,5 +24,6 @@ namespace grrt {
         bool useMPI = false;
         int mpiSize = 0;
         int mpiRank = 0;
+        bool preprocessOnly = false;
     };
 }  // namespace grrt

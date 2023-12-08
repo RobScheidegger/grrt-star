@@ -8,6 +8,8 @@
 #include <mpi.h>
 #include <unordered_set>
 
+#define ORACLE_VERTEX_ATTEMPTS 10
+
 using namespace grrt;
 
 Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
@@ -18,6 +20,7 @@ Solver::Solver(const SolverConfig::SharedPtr& config) : m_config(config) {
     }
     m_searchGraph = std::make_shared<SearchGraph>(roadmaps);
     m_voxelManager = config->robotFactory->makeVoxelManager();
+    m_robotsToMove = 3;  // TODO std::max(std::sqrt(m_config->robots.size()), 3);
 }
 
 SolverResult::SharedPtr Solver::tracePath(const SearchTree::SharedPtr& searchTree, const SearchVertex::SharedPtr& start,
@@ -70,8 +73,10 @@ SolverResult::SharedPtr Solver::solveProblem(const SolverProblem& problem, std::
 
     const int num_iterations = 10;
 
-    while (!cancellationToken) {
+    while (!m_cancelled) {
         for (uint32_t i = 0; i < num_iterations; i++) {
+            if (m_cancelled)
+                break;
             auto start = std::chrono::high_resolution_clock::now();
             if (expand(T, problem.goal))
                 break;
@@ -81,6 +86,7 @@ SolverResult::SharedPtr Solver::solveProblem(const SolverProblem& problem, std::
         }
 
         if (T->contains(problem.goal)) {
+            spdlog::info("Found goal!");
             return tracePath(T, problem.start, problem.goal);
         }
     }
@@ -93,6 +99,7 @@ SolverResult::SharedPtr Solver::solveProblem(const SolverProblem& problem, std::
         result->success = false;
         return result;
     }
+    spdlog::warn("Couldn't find a nearest point to the goal, returning empty result");
     return result;
 }
 
@@ -102,6 +109,7 @@ SolverSolutions Solver::solve() {
 
     auto start = std::chrono::high_resolution_clock::now();
     this->computeVoxels();
+
     for (const auto& roadmap : m_searchGraph->roadmaps) {
         roadmap->computeAllPairsShortestPath();
     }
@@ -109,19 +117,23 @@ SolverSolutions Solver::solve() {
     auto preprocess_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     spdlog::info("Preprocessing took {} ms", preprocess_time);
 
+    if (m_config->preprocessOnly)
+        return solutions;
+
     // set cancellation token to true in 10 seconds
     for (const auto& problem : m_config->problems) {
         std::atomic_bool cancellationToken(false);
-        std::thread([&cancellationToken]() {
-            std::this_thread::sleep_for(std::chrono::seconds(10));
-            cancellationToken = true;
+        std::thread([this]() {
+            // Sleep for 10 seconds
+            std::this_thread::sleep_for(std::chrono::seconds(60));
+            this->m_cancelled = true;
         }).detach();
         auto start = std::chrono::high_resolution_clock::now();
         auto result = solveProblem(problem, cancellationToken);
         auto end = std::chrono::high_resolution_clock::now();
         auto solve_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
-        spdlog::info("Solved problem {} in {} s", problem.name, solve_time);
+        spdlog::info("Solved problem {} in {} s with path size {}", problem.name, solve_time, result->path.size());
 
         solutions->insert(std::make_pair(problem.name, result));
     }
@@ -132,6 +144,7 @@ SolverSolutions Solver::solve() {
 void Solver::computeVoxels() {
     // make a set of roadmaps
     std::unordered_set<Roadmap::SharedPtr> roadmaps;
+#pragma omp parallel for
     for (auto& robot : m_config->robots) {
         if (!roadmaps.count(robot->roadmap)) {
             for (auto& dart : robot->roadmap->darts) {
@@ -142,7 +155,17 @@ void Solver::computeVoxels() {
     }
 }
 
-#define ORACLE_VERTEX_ATTEMPTS 10
+inline std::vector<bool> generateRandomRobotMask(const std::vector<IRobot::SharedPtr>& robots,
+                                                 const size_t num_robots) {
+    std::vector<bool> mask(robots.size());
+
+    for (size_t i = 0; i < num_robots && i < robots.size(); i++) {
+        mask[i] = true;
+    }
+
+    std::random_shuffle(mask.begin(), mask.end());
+    return mask;
+}
 
 SearchVertex::SharedPtr Solver::distanceOracleMPI(const SearchVertex::SharedPtr& nearVertex,
                                                   const SearchVertex::SharedPtr& goalVertex) {
@@ -202,29 +225,26 @@ SearchVertex::SharedPtr Solver::distanceOracle(const SearchVertex::SharedPtr& ne
 
     size_t attempts = 0;
     while (attempts++ < ORACLE_VERTEX_ATTEMPTS) {
-        size_t attempts = 0;
-        while (attempts++ < ORACLE_VERTEX_ATTEMPTS) {
-            auto newVertex = m_searchGraph->sampleAdjacentVertex(nearVertex);
-            if (newVertex == nullptr) {
-                // Help
-                spdlog::warn("sampleAdjacentVertex returned nullptr");
-                continue;
-            }
+        m_pointsConsidered += 1;
+        if (m_cancelled)
+            break;
+        auto mask = generateRandomRobotMask(m_config->robots, m_robotsToMove);
+        auto newVertex = m_searchGraph->sampleAdjacentVertex(nearVertex, mask);
+        if (newVertex == nullptr) {
+            spdlog::warn("sampleAdjacentVertex returned nullptr");
+            continue;
+        }
 
-            // Check that the edge between the near vertex and new vertex is collision free.
-            auto newDart = std::make_shared<SearchDart>(nearVertex, newVertex, 1);
-            auto darts = m_searchGraph->getRoadmapDarts(nearVertex, newVertex);
-            spdlog::info("Checking dart {}", newDart->toString());
-            auto start = std::chrono::high_resolution_clock::now();
-            bool collisionFree = checkCollisionFreeDarts(darts);
-            auto end = std::chrono::high_resolution_clock::now();
-            auto collision_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            spdlog::trace("Collision check took {} ms", collision_time);
-            spdlog::info("Checked dart {}", newDart->toString());
+        // Check that the edge between the near vertex and new vertex is collision free.
+        auto newDart = std::make_shared<SearchDart>(nearVertex, newVertex, 1);
+        auto darts = m_searchGraph->getRoadmapDarts(nearVertex, newVertex);
+        auto start = std::chrono::high_resolution_clock::now();
+        bool collisionFree = checkCollisionFreeDarts(darts);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto collision_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
-            if (collisionFree) {
-                return newVertex;
-            }
+        if (collisionFree) {
+            return newVertex;
         }
     }
 

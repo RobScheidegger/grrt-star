@@ -4,6 +4,7 @@
 
 #include "constants.h"
 #include "graphs/roadmap.h"
+#include "robots/drone/drone.hpp"
 #include "robots/drone/drone_gpu.h"
 #include "robots/robot_factory.h"
 
@@ -16,8 +17,8 @@ using namespace grrt;
 
 //     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
 //     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
-//     auto v1 = roadmap->addVertex("v1", std::make_shared<DroneGPUState>(Point(-1, 0, 0), 1.0));
-//     auto v2 = roadmap->addVertex("v2", std::make_shared<DroneGPUState>(Point(1, 0, 0), 1.0));
+//     auto v1 = roadmap->addVertex("v1", std::make_shared<DroneState>(Point(-1, 0, 0), 1.0));
+//     auto v2 = roadmap->addVertex("v2", std::make_shared<DroneState>(Point(1, 0, 0), 1.0));
 
 //     auto d1 = roadmap->addDart(v1, v2);
 //     auto d2 = roadmap->addDart(v2, v1);
@@ -40,11 +41,11 @@ using namespace grrt;
 
 //     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
 //     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
-//     auto v1_left = roadmap->addVertex("v1_left", std::make_shared<DroneGPUState>(Point(0, 0, 2), ROBOT_RADIUS));
-//     auto v1_right = roadmap->addVertex("v1_right", std::make_shared<DroneGPUState>(Point(0, 0, 1), ROBOT_RADIUS));
+//     auto v1_left = roadmap->addVertex("v1_left", std::make_shared<DroneState>(Point(0, 0, 2), ROBOT_RADIUS));
+//     auto v1_right = roadmap->addVertex("v1_right", std::make_shared<DroneState>(Point(0, 0, 1), ROBOT_RADIUS));
 //     // essentially 2.1
-//     auto v2_left = roadmap->addVertex("v2_left", std::make_shared<DroneGPUState>(Point(0, 0, -1), ROBOT_RADIUS));
-//     auto v2_right = roadmap->addVertex("v2_right", std::make_shared<DroneGPUState>(Point(0, 0, -1), ROBOT_RADIUS));
+//     auto v2_left = roadmap->addVertex("v2_left", std::make_shared<DroneState>(Point(0, 0, -1), ROBOT_RADIUS));
+//     auto v2_right = roadmap->addVertex("v2_right", std::make_shared<DroneState>(Point(0, 0, -1), ROBOT_RADIUS));
 
 //     auto d1 = roadmap->addDart(v1_left, v1_right);
 //     auto d2 = roadmap->addDart(v2_left, v2_right);
@@ -73,14 +74,14 @@ using namespace grrt;
 //     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
 //     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
 //     auto v1_left = roadmap->addVertex(
-//         "v1_left", std::make_shared<DroneGPUState>(Point(-10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+//         "v1_left", std::make_shared<DroneState>(Point(-10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
 //     auto v1_right = roadmap->addVertex(
-//         "v1_right", std::make_shared<DroneGPUState>(Point(-5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
+//         "v1_right", std::make_shared<DroneState>(Point(-5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
 //     // essentially 2.1
 //     auto v2_left = roadmap->addVertex(
-//         "v2_left", std::make_shared<DroneGPUState>(Point(10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+//         "v2_left", std::make_shared<DroneState>(Point(10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
 //     auto v2_right = roadmap->addVertex(
-//         "v2_right", std::make_shared<DroneGPUState>(Point(0.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+//         "v2_right", std::make_shared<DroneState>(Point(0.000000, 0.000000, 0.000000), ROBOT_RADIUS));
 
 //     auto d1 = roadmap->addDart(v1_left, v1_right);
 //     auto d2 = roadmap->addDart(v2_left, v2_right);
@@ -105,15 +106,15 @@ using namespace grrt;
 //     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
 //     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
 
-//     auto v1_left = roadmap->addVertex("v1_left", std::make_shared<DroneGPUState>(Point(0, 0, -1), ROBOT_RADIUS));
-//     auto v1_right = roadmap->addVertex("v1_right", std::make_shared<DroneGPUState>(Point(0, 0, 1), ROBOT_RADIUS));
+//     auto v1_left = roadmap->addVertex("v1_left", std::make_shared<DroneState>(Point(0, 0, -1), ROBOT_RADIUS));
+//     auto v1_right = roadmap->addVertex("v1_right", std::make_shared<DroneState>(Point(0, 0, 1), ROBOT_RADIUS));
 //     // essentially 2.1
 //     auto v2_left = roadmap->addVertex(
 //         "v2_left",
-//         std::make_shared<DroneGPUState>(Point(ROBOT_RADIUS * 2 + VOXEL_RESOLUTION * 2, 0, -1), ROBOT_RADIUS));
+//         std::make_shared<DroneState>(Point(ROBOT_RADIUS * 2 + VOXEL_RESOLUTION * 2, 0, -1), ROBOT_RADIUS));
 //     auto v2_right = roadmap->addVertex(
 //         "v2_right",
-//         std::make_shared<DroneGPUState>(Point(ROBOT_RADIUS * 2 + VOXEL_RESOLUTION * 2, 0, 1), ROBOT_RADIUS));
+//         std::make_shared<DroneState>(Point(ROBOT_RADIUS * 2 + VOXEL_RESOLUTION * 2, 0, 1), ROBOT_RADIUS));
 
 //     auto d1 = roadmap->addDart(v1_left, v1_right);
 //     auto d2 = roadmap->addDart(v2_left, v2_right);
@@ -142,14 +143,14 @@ using namespace grrt;
 //     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
 //     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
 //     auto v1_left = roadmap->addVertex(
-//         "v1_left", std::make_shared<DroneGPUState>(Point(-10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+//         "v1_left", std::make_shared<DroneState>(Point(-10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
 //     auto v1_right = roadmap->addVertex(
-//         "v1_right", std::make_shared<DroneGPUState>(Point(-5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
+//         "v1_right", std::make_shared<DroneState>(Point(-5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
 //     // essentially 2.1
 //     auto v2_left = roadmap->addVertex(
-//         "v2_left", std::make_shared<DroneGPUState>(Point(-5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
+//         "v2_left", std::make_shared<DroneState>(Point(-5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
 //     auto v2_right = roadmap->addVertex(
-//         "v2_right", std::make_shared<DroneGPUState>(Point(0.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+//         "v2_right", std::make_shared<DroneState>(Point(0.000000, 0.000000, 0.000000), ROBOT_RADIUS));
 
 //     auto d1 = roadmap->addDart(v1_left, v1_right);
 //     auto d2 = roadmap->addDart(v2_left, v2_right);
@@ -177,15 +178,15 @@ TEST(PointCloudVoxelsGPU, TestNoCollisionAnother) {
 
     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
-    auto v1_left = roadmap->addVertex(
-        "v1_left", std::make_shared<DroneGPUState>(Point(0.000000, 10.000000, 0.000000), ROBOT_RADIUS));
-    auto v1_right = roadmap->addVertex(
-        "v1_right", std::make_shared<DroneGPUState>(Point(5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
+    auto v1_left =
+        roadmap->addVertex("v1_left", std::make_shared<DroneState>(Point(0.000000, 10.000000, 0.000000), ROBOT_RADIUS));
+    auto v1_right =
+        roadmap->addVertex("v1_right", std::make_shared<DroneState>(Point(5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
     // essentially 2.1
     auto v2_left = roadmap->addVertex(
-        "v2_left", std::make_shared<DroneGPUState>(Point(-10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
-    auto v2_right = roadmap->addVertex(
-        "v2_right", std::make_shared<DroneGPUState>(Point(0.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+        "v2_left", std::make_shared<DroneState>(Point(-10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+    auto v2_right =
+        roadmap->addVertex("v2_right", std::make_shared<DroneState>(Point(0.000000, 0.000000, 0.000000), ROBOT_RADIUS));
 
     auto d1 = roadmap->addDart(v1_left, v1_right);
     auto d2 = roadmap->addDart(v2_left, v2_right);
@@ -213,15 +214,15 @@ TEST(PointCloudVoxelsGPU, TestNoCollisionAnotherHaha) {
 
     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
     Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
-    auto v1_left = roadmap->addVertex(
-        "v1_left", std::make_shared<DroneGPUState>(Point(5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
+    auto v1_left =
+        roadmap->addVertex("v1_left", std::make_shared<DroneState>(Point(5.000000, 5.000000, 0.000000), ROBOT_RADIUS));
     auto v1_right = roadmap->addVertex(
-        "v1_right", std::make_shared<DroneGPUState>(Point(10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+        "v1_right", std::make_shared<DroneState>(Point(10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
     // essentially 2.1
-    auto v2_left = roadmap->addVertex(
-        "v2_left", std::make_shared<DroneGPUState>(Point(0.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+    auto v2_left =
+        roadmap->addVertex("v2_left", std::make_shared<DroneState>(Point(0.000000, 0.000000, 0.000000), ROBOT_RADIUS));
     auto v2_right = roadmap->addVertex(
-        "v2_right", std::make_shared<DroneGPUState>(Point(10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
+        "v2_right", std::make_shared<DroneState>(Point(10.000000, 0.000000, 0.000000), ROBOT_RADIUS));
 
     auto d1 = roadmap->addDart(v1_left, v1_right);
     auto d2 = roadmap->addDart(v2_left, v2_right);

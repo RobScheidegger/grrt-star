@@ -31,6 +31,9 @@ static Result parseVoxelType(const std::string& voxelTypeStr, VoxelType& voxelTy
     if (voxelTypeStr == "PCL") {
         voxelType = VoxelType::POINT_CLOUD;
         return Result::Ok();
+    } else if (voxelTypeStr == "PCL_GPU") {
+        voxelType = VoxelType::POINT_CLOUD_GPU;
+        return Result::Ok();
     }
     return Result::Error("Unknown voxel type: " + voxelTypeStr);
 }
@@ -476,6 +479,9 @@ Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResu
         }
         solution->path.push_back(std::make_shared<SearchVertex>(roadmapStates));
     }
+
+    // Reverse the path so that it is in the correct order.
+    std::reverse(solution->path.begin(), solution->path.end());
 
     return Result::Ok();
 }
