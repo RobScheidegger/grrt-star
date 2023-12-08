@@ -2,12 +2,16 @@
 
 #include <vector>
 
-#include "constants.h"
 #include "point.h"
 #include "voxels/voxel.h"
 #include "voxels/voxel_manager.h"
 
+#include "constants.h"
+
 // this is the size of each point in the point cloud (used as a threshold to see if any points are in the range of any points from a different voxelspread).
+// #ifndef PCL_VOXEL_RADIUS
+// #define PCL_VOXEL_RADIUS 0.05
+// #endif
 
 namespace grrt {
 
@@ -57,7 +61,11 @@ namespace grrt {
             for (const Point& point_1 : pcl_voxel_1->m_points) {
                 int j = 0;
                 for (const Point& point_2 : pcl_voxel_2->m_points) {
-                    if (point_1.distance_squared(point_2) < PCL_VOXEL_RADIUS * PCL_VOXEL_RADIUS) {
+                    float dist = point_1.distance(point_2);
+                    if (dist < PCL_VOXEL_RADIUS) {
+                        // printf("Point: (%f, %f, %f) at %d and Point: (%f, %f, %f) at %d with dist: %f\n", point_1.x,
+                        //        point_1.y, point_1.z, i, point_2.x, point_2.y, point_2.z, j, dist);
+                        // printf("collision!\n");
                         return true;
                     }
                     j += 3;

@@ -6,6 +6,8 @@
 
 #include <math.h>
 
+#define VOXEL_SWEEP_ERROR 0.001
+
 namespace grrt {
     class DroneGPUState : public RobotState {
        public:
@@ -46,9 +48,21 @@ namespace grrt {
             // We can't use a Point* here, instead a float* wehre each point is represented as three consecutive floats in the points array.
             // printf("divisions: %d\n", int(sweep_length / VOXEL_SWEEP_STEP_SIZE));
             // the +1 is beccause a voxel is also generated at swept_distance = 0
-            int cloud_point_size = VOXEL_POINTS_SAMPLING_SIZE * (int(sweep_length / VOXEL_SWEEP_STEP_SIZE) + 1) * 3;
+
+            // int exptected_num_iters = (sweep_length != 0) ? int(sweep_length / VOXEL_SWEEP_STEP_SIZE) : 1;
+            int exptected_num_iters = int(sweep_length / VOXEL_SWEEP_STEP_SIZE) + 1;
+            // 0, 5, 10, 15
+            // 15 / 5 == 3
+
+            // if (std::fmod(sweep_length, VOXEL_SWEEP_STEP_SIZE) == 0) {
+            //     exptected_num_iters += 1;
+            // }
+
+            int cloud_point_size = VOXEL_POINTS_SAMPLING_SIZE * exptected_num_iters * 3;
 
             PointCloudVoxelGPU::SharedPtr cloud = std::make_shared<PointCloudVoxelGPU>(cloud_point_size);
+
+            // int cloud_point_size = 0;
 
             cloud->start_point = start_point;
             cloud->end_point = end_point;
@@ -57,8 +71,8 @@ namespace grrt {
             float phi = M_PI * (std::sqrt(5.) - 1.);  // golden angle in radian
 
             int thing = 0;
-            for (float swept_distance = 0; swept_distance <= sweep_length; swept_distance += VOXEL_SWEEP_STEP_SIZE) {
-                thing += 1;
+            for (float swept_distance = 0; swept_distance <= sweep_length + VOXEL_SWEEP_ERROR;
+                 swept_distance += VOXEL_SWEEP_STEP_SIZE) {
                 float a = swept_distance;
                 float b = sweep_length - swept_distance;
 
@@ -78,7 +92,12 @@ namespace grrt {
                     float z = sin(theta) * radius;
                     cloud->addPoint(Point(x * start_state->radius + offset.x, y * start_state->radius + offset.y,
                                           z * start_state->radius + offset.z));
+                    thing += 3;
                 }
+            }
+
+            if ((exptected_num_iters * 3) != thing) {
+                printf("mismatch!!! %d, %d\n", (exptected_num_iters * 3), thing);
             }
 
             // printf("thing: %d\n", thing);

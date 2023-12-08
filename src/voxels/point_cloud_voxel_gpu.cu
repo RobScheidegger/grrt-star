@@ -3,6 +3,8 @@
 #include <driver_types.h>
 #include <chrono>
 
+#include "constants.h"
+
 
 #include "voxels/point_cloud/point_cloud_voxel_gpu.h"
 // Linker issue caused here
