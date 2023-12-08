@@ -149,11 +149,11 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
 
     float *bool_sum;
 
-    printf("start_point 1: (%f, %f, %f)\n", pcl_voxel_1->start_point.x, pcl_voxel_1->start_point.y, pcl_voxel_1->start_point.z);
-    printf("end_point 1: (%f, %f, %f)\n", pcl_voxel_1->end_point.x, pcl_voxel_1->end_point.y, pcl_voxel_1->end_point.z);
+    // printf("start_point 1: (%f, %f, %f)\n", pcl_voxel_1->start_point.x, pcl_voxel_1->start_point.y, pcl_voxel_1->start_point.z);
+    // printf("end_point 1: (%f, %f, %f)\n", pcl_voxel_1->end_point.x, pcl_voxel_1->end_point.y, pcl_voxel_1->end_point.z);
 
-    printf("start_point 2: (%f, %f, %f)\n", pcl_voxel_2->start_point.x, pcl_voxel_2->start_point.y, pcl_voxel_2->start_point.z);
-    printf("end_point 2: (%f, %f, %f)\n", pcl_voxel_2->end_point.x, pcl_voxel_2->end_point.y, pcl_voxel_2->end_point.z);
+    // printf("start_point 2: (%f, %f, %f)\n", pcl_voxel_2->start_point.x, pcl_voxel_2->start_point.y, pcl_voxel_2->start_point.z);
+    // printf("end_point 2: (%f, %f, %f)\n", pcl_voxel_2->end_point.x, pcl_voxel_2->end_point.y, pcl_voxel_2->end_point.z);
 
     // Each MAX_THREADS_PER_BLOCK * NUM_PCV1_POINTS_PER_THREAD Points in pcl_voxel_1 will be worked on by a block, but the shuffle operation only occurs within a warp which is 32 threads aka 32 points (through 32 * 3 floats) in pcv1.
     // printf("blah: %lu\n", pcl_voxel_1->num_points);
@@ -166,6 +166,8 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
     if (err != cudaSuccess) {
         printf("Failed to allocate memory for bool_sum");
     }
+
+    memset(bool_sum, 0, bool_sum_size * sizeof(float));
 
     // printf("bool_sum_size: %d\n", bool_sum_size);
 
