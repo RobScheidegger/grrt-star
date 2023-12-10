@@ -42,18 +42,18 @@ namespace grrt {
             // generate fibonacci sphere: https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
             float phi = M_PI * (std::sqrt(5.) - 1.);  // golden angle in radian
 
-            Point start_point = start_state->position;
-            Point end_point = end_state->position;
+            const Point start_point = start_state->position;
+            const Point end_point = end_state->position;
 
-            float sweep_length = start_point.distance(end_point);
+            const float sweep_length = start_point.distance(end_point);
 
             for (float swept_distance = 0; swept_distance <= sweep_length; swept_distance += VOXEL_SWEEP_STEP_SIZE) {
-                float a = swept_distance;
-                float b = sweep_length - swept_distance;
+                const float a = swept_distance;
+                const float b = sweep_length - swept_distance;
 
-                float x_delta = a / (a + b) * (end_point.x - start_point.x);
-                float y_delta = a / (a + b) * (end_point.y - start_point.y);
-                float z_delta = a / (a + b) * (end_point.z - start_point.z);
+                const float x_delta = ((a + b) != 0) ? a / (a + b) * (end_point.x - start_point.x) : 0;
+                const float y_delta = ((a + b) != 0) ? a / (a + b) * (end_point.y - start_point.y) : 0;
+                const float z_delta = ((a + b) != 0) ? a / (a + b) * (end_point.z - start_point.z) : 0;
 
                 Point offset = {start_point.x + x_delta, start_point.y + y_delta, start_point.z + z_delta};
 

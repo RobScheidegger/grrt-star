@@ -34,6 +34,29 @@ void testHeadOnCollision(const RobotFactory::SharedPtr& factory) {
 }
 
 template <typename TRobotType>
+void testHeadOnCollisionStationary(const RobotFactory::SharedPtr& factory) {
+    //
+    // Checks that two voxels intersecting each other actually intersect
+    //
+
+    Roadmap::SharedPtr roadmap = factory->makeRoadmap("Test Drone Roadmap", RobotType::DRONE);
+    auto v1 = roadmap->addVertex("v1", std::make_shared<DroneState>(Point(-1, 0, 0), 1.0));
+    auto v2 = roadmap->addVertex("v2", std::make_shared<DroneState>(Point(1, 0, 0), 1.0));
+
+    auto d1 = roadmap->addDart(v1, v1);
+    auto d2 = roadmap->addDart(v2, v1);
+
+    TRobotType drone1(1, "Drone 1", roadmap);
+    TRobotType drone2(2, "Drone 2", roadmap);
+
+    auto voxel1 = drone1.getSweptVoxel(d1);
+    auto voxel2 = drone2.getSweptVoxel(d2);
+
+    VoxelManager::SharedPtr voxel_manager = factory->makeVoxelManager();
+    EXPECT_TRUE(voxel_manager->intersect(voxel1, voxel2));
+}
+
+template <typename TRobotType>
 void testBarelyCollision(const RobotFactory::SharedPtr& factory) {
     //
     // Checks that two voxels that barely intersect each other actually intersect
@@ -246,6 +269,11 @@ TEST(PointCloudVoxels, TestHeadOnCollision) {
     testHeadOnCollision<Drone>(factory);
 }
 
+TEST(PointCloudVoxels, TestHeadOnCollisionStationary) {
+    RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD);
+    testHeadOnCollisionStationary<Drone>(factory);
+}
+
 TEST(PointCloudVoxels, TestBarelyCollision) {
     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD);
     testBarelyCollision<Drone>(factory);
@@ -286,6 +314,11 @@ TEST(PointCloudVoxels, TestNoCollision4) {
 TEST(PointCloudVoxelsGPU, TestHeadOnCollision) {
     RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
     testHeadOnCollision<DroneGPU>(factory);
+}
+
+TEST(PointCloudVoxelsGPU, TestHeadOnCollisionStationary) {
+    RobotFactory::SharedPtr factory = std::make_shared<RobotFactory>(VoxelType::POINT_CLOUD_GPU);
+    testHeadOnCollisionStationary<DroneGPU>(factory);
 }
 
 TEST(PointCloudVoxelsGPU, TestBarelyCollision) {
