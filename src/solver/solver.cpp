@@ -123,12 +123,13 @@ SolverSolutions Solver::solve() {
 
     // set cancellation token to true in 10 seconds
     for (const auto& problem : m_config->problems) {
-        std::atomic_bool cancellationToken(false);
+
+        // Run a background thread to cancel the task if the timeout is exceeded
         std::thread([this]() {
-            // Sleep for 10 seconds
-            std::this_thread::sleep_for(std::chrono::seconds(10));
+            std::this_thread::sleep_for(std::chrono::seconds(m_config->timeoutSeconds));
             this->m_cancelled = true;
         }).detach();
+
         auto start = std::chrono::high_resolution_clock::now();
         auto result = solveProblem(problem, cancellationToken);
         auto end = std::chrono::high_resolution_clock::now();

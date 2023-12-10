@@ -45,6 +45,7 @@ TEST(SolverExpansion, TestBasicRRTExpansion1) {
     config->robots.push_back(std::make_shared<Drone>(1, "Drone 2", roadmap));
     config->problems.push_back(SolverProblem("Test Drone Roadmap", start_vertex, end_vertex));
     config->robotFactory = factory;
+    config->timeoutSeconds = 2;
 
     Solver solver = Solver(config);
     auto solutions = solver.solve();
@@ -83,6 +84,7 @@ TEST(SolverExpansion, TestBasicRRTExpansion2) {
     config->robots.push_back(std::make_shared<Drone>(1, "Drone 2", roadmap));
     config->problems.push_back(SolverProblem("Test Drone Roadmap", start_vertex, end_vertex));
     config->robotFactory = factory;
+    config->timeoutSeconds = 2;
 
     Solver solver = Solver(config);
     auto solutions = solver.solve();
