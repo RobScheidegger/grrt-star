@@ -49,24 +49,16 @@ namespace grrt {
 
             volatile bool foundIntersection = false;
 
-#pragma parallel for shared(foundIntersection)
             for (const Point& point_1 : pcl_voxel_1->m_points) {
-                if (foundIntersection)
-                    continue;
                 for (const Point& point_2 : pcl_voxel_2->m_points) {
                     float dist = point_1.distance_squared(point_2);
                     if (dist < PCL_VOXEL_RADIUS * PCL_VOXEL_RADIUS) {
-                        foundIntersection = true;
+                        return true;
                     }
                 }
             }
 
-            return foundIntersection;
-        }
-
-        Voxel::SharedPtr optimize(Voxel::SharedPtr& voxel) override {
-            // TODO
-            return nullptr;
+            return false;
         }
     };
 

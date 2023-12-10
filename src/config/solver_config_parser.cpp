@@ -27,17 +27,6 @@ static grrt::Result parseRobotType(const std::string& robotTypeStr, RobotType& r
     return Result::Error("Unknown robot type: " + robotTypeStr);
 }
 
-static Result parseVoxelType(const std::string& voxelTypeStr, VoxelType& voxelType) {
-    if (voxelTypeStr == "PCL") {
-        voxelType = VoxelType::POINT_CLOUD;
-        return Result::Ok();
-    } else if (voxelTypeStr == "PCL_GPU") {
-        voxelType = VoxelType::POINT_CLOUD_GPU;
-        return Result::Ok();
-    }
-    return Result::Error("Unknown voxel type: " + voxelTypeStr);
-}
-
 static Result getString(const ryml::ConstNodeRef& node, const std::string& key, std::string& value) {
     auto key_substr = c4::to_csubstr(key);
     if (!node.has_child(key_substr)) {
@@ -345,7 +334,7 @@ Result parseProblems(const ryml::NodeRef& node, SolverConfig::SharedPtr config) 
     return Result::Ok();
 }
 
-SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName) {
+SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName, const VoxelType voxelType) {
     SolverConfig::SharedPtr config = std::make_shared<SolverConfig>();
 
     std::ifstream file(fileName);
@@ -366,33 +355,8 @@ SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName) {
         std::cerr << "Root node must be a map" << std::endl;
         return nullptr;
     }
-    // Voxel Type
-    if (!root.has_child("voxels")) {
-        std::cerr << "Missing voxels" << std::endl;
-        return nullptr;
-    }
 
-    auto voxels = root["voxels"];
-    if (!voxels.is_map()) {
-        std::cerr << "Voxels must be a map" << std::endl;
-        return nullptr;
-    }
-
-    std::string voxel_type_str;
-    Result result = getString(voxels, "type", voxel_type_str);
-    if (result.isError) {
-        spdlog::error("Error parsing voxel type: {}", result.msg);
-        return nullptr;
-    }
-
-    VoxelType voxel_type;
-    result = parseVoxelType(voxel_type_str, voxel_type);
-    if (result.isError) {
-        spdlog::error("Error parsing voxel type: {}", result.msg);
-        return nullptr;
-    }
-
-    config->robotFactory = std::make_shared<RobotFactory>(voxel_type);
+    config->robotFactory = std::make_shared<RobotFactory>(voxelType);
 
     // Roadmaps
     if (!root.has_child("roadmaps")) {
@@ -401,7 +365,7 @@ SolverConfig::SharedPtr SolverConfigParser::parse(const std::string& fileName) {
     }
 
     auto roadmaps = root["roadmaps"];
-    result = parseRoadmaps(roadmaps, config);
+    Result result = parseRoadmaps(roadmaps, config);
     if (result.isError) {
         spdlog::error("Error parsing roadmap: {}", result.msg);
         return nullptr;
@@ -484,4 +448,21 @@ Result SolverConfigParser::parseSolution(const std::string& fileName, SolverResu
     std::reverse(solution->path.begin(), solution->path.end());
 
     return Result::Ok();
+}
+
+Result SolverConfigParser::parseVoxelType(const std::string& voxelTypeStr, VoxelType& voxelType) {
+    if (voxelTypeStr == "PCL") {
+        voxelType = VoxelType::POINT_CLOUD;
+        return Result::Ok();
+    } else if (voxelTypeStr == "PCL_GPU") {
+        voxelType = VoxelType::POINT_CLOUD_GPU;
+        return Result::Ok();
+    } else if (voxelTypeStr == "PCL_SORTED") {
+        voxelType = VoxelType::POINT_CLOUD_SORTED;
+        return Result::Ok();
+    } else if (voxelTypeStr == "PCL_GPU_SORTED") {
+        voxelType = VoxelType::POINT_CLOUD_GPU_SORTED;
+        return Result::Ok();
+    }
+    return Result::Error("Unknown voxel type: " + voxelTypeStr);
 }

@@ -3,7 +3,7 @@
 
 #include "pcl_conversions/pcl_conversions.h"
 #include "sensor_msgs/msg/point_cloud2.hpp"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 
 #include "pkgs/cli11.hpp"
@@ -265,7 +265,7 @@ int main(int argc, char** argv) {
     }
 
     spdlog::info("Loading configuration file: {}", options.configuration_file);
-    SolverConfig::SharedPtr config = SolverConfigParser::parse(options.configuration_file);
+    SolverConfig::SharedPtr config = SolverConfigParser::parse(options.configuration_file, VoxelType::POINT_CLOUD);
 
     if (config == nullptr) {
         spdlog::error("Failed to parse configuration file");

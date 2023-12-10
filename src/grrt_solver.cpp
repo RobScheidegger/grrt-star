@@ -12,6 +12,7 @@ using namespace grrt;
 
 struct SolverCLIOptions {
     std::string configuration_file = "";
+    std::string voxelType = "PCL";
     bool useMPI = false;
     size_t timeoutSeconds = 10;
 };
@@ -24,6 +25,7 @@ int main(int argc, char** argv) {
     app.add_option("-c,--config", options.configuration_file, "Configuration file path");
     app.add_option("-m,--mpi", options.useMPI, "Use MPI");
     app.add_option("-t,--timeout", options.timeoutSeconds, "Timeout in seconds");
+    app.add_option("-v,--voxel-type", options.voxelType, "Voxel type");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -34,8 +36,15 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    VoxelType voxelType;
+    Result result = SolverConfigParser::parseVoxelType(options.voxelType, voxelType);
+    if (result.isError) {
+        spdlog::error("Failed to parse voxel type: {}", result.msg);
+        return 1;
+    }
+
     spdlog::info("Loading configuration file: {}", options.configuration_file);
-    SolverConfig::SharedPtr config = SolverConfigParser::parse(options.configuration_file);
+    SolverConfig::SharedPtr config = SolverConfigParser::parse(options.configuration_file, voxelType);
 
     if (config == nullptr) {
         spdlog::error("Failed to parse configuration file");
@@ -62,6 +71,7 @@ int main(int argc, char** argv) {
     Solver::SharedPtr solver = std::make_shared<Solver>(config);
 
     if (options.useMPI && mpi_rank != 0) {
+        spdlog::info("Launching MPI worker {}", mpi_rank);
         solver->launchMPIWorker();
         MPI_Finalize();
         return 0;
