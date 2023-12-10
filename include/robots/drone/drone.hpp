@@ -28,9 +28,6 @@ namespace grrt {
         float radius;
     };
 
-    // point cloud resolution is the effective radius of each point in the point cloud
-    // and then there is also the step size wihich is on the same order.
-
     class Drone : public IRobot {
        public:
         Drone(const RobotId id, const std::string& name, const Roadmap::SharedPtr& roadmap)
@@ -47,9 +44,6 @@ namespace grrt {
 
             Point start_point = start_state->position;
             Point end_point = end_state->position;
-
-            // printf("start_point: (%f, %f, %f)\n", start_point.x, start_point.y, start_point.z);
-            // printf("end_point: (%f, %f, %f)\n", end_point.x, end_point.y, end_point.z);
 
             float sweep_length = start_point.distance(end_point);
 
@@ -98,6 +92,4 @@ namespace grrt {
        private:
         void addPointsAtDistance(PointCloudVoxel::SharedPtr& cloud, const float sweptDistance) const {}
     };
-
-    // we will make a drone gpu (another robot) and have
 }  // namespace grrt

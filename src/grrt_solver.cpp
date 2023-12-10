@@ -51,6 +51,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    config->timeoutSeconds = options.timeoutSeconds;
+
     int mpi_size = -1;
     int mpi_rank = -1;
 

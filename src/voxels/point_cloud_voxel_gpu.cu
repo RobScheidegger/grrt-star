@@ -20,17 +20,27 @@
 
 using namespace grrt;
 
+#define checkCudaErr(ans) \
+    { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true) {
+    if (code != cudaSuccess) {
+        fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        if (abort)
+            exit(code);
+    }
+}
+
 // each thread works on 3 floats from pcl_voxel_1 and 3 floats from pcl_voxel_2
 __global__ void intersect_shuffle(float* pcl_voxel_1_pnts, float* pcl_voxel_2_pnts, int pcl_voxel_1_count,
                                   int pcl_voxel_2_count, int* bool_sum, int bool_sum_size) {
 
-    int warp_id = threadIdx.x / THREADS_PER_WARP;
-    int lane_id = threadIdx.x % THREADS_PER_WARP;
+    const int warp_id = threadIdx.x / THREADS_PER_WARP;
+    const int lane_id = threadIdx.x % THREADS_PER_WARP;
 
     // A thread acts on three floats
-    int pcl_v1_start_i = (blockIdx.x * MAX_THREADS_PER_BLOCK + lane_id * WARP_SIZE + warp_id) * FLOATS_PER_POINT *
-                         NUM_PCV1_POINTS_PER_THREAD;
-    int pcl_v2_start_i = blockIdx.y * FLOATS_PER_POINT * NUM_PCV2_POINTS_PER_THREAD;
+    const int pcl_v1_start_i = (blockIdx.x * MAX_THREADS_PER_BLOCK + lane_id * WARP_SIZE + warp_id) * FLOATS_PER_POINT *
+                               NUM_PCV1_POINTS_PER_THREAD;
+    const int pcl_v2_start_i = blockIdx.y * FLOATS_PER_POINT * NUM_PCV2_POINTS_PER_THREAD;
 
     if (pcl_v1_start_i >= pcl_voxel_1_count || pcl_v2_start_i >= pcl_voxel_2_count) {
         return;
@@ -41,7 +51,9 @@ __global__ void intersect_shuffle(float* pcl_voxel_1_pnts, float* pcl_voxel_2_pn
     for (int pcl_v1_i = pcl_v1_start_i; pcl_v1_i < pcl_v1_start_i + NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT;
          pcl_v1_i += 3) {
 
-        // TODO: this is a bit scuffed but it works
+        if (sum)
+            break;
+
         if (pcl_v1_i >= pcl_voxel_1_count) {
             return;
         }
@@ -52,15 +64,16 @@ __global__ void intersect_shuffle(float* pcl_voxel_1_pnts, float* pcl_voxel_2_pn
             if (pcl_v2_i >= pcl_voxel_2_count) {
                 break;
             }
-            float dist = std::sqrt((pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) *
-                                       (pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) +
-                                   (pcl_voxel_1_pnts[pcl_v1_i + 1] - pcl_voxel_2_pnts[pcl_v2_i + 1]) *
-                                       (pcl_voxel_1_pnts[pcl_v1_i + 1] - pcl_voxel_2_pnts[pcl_v2_i + 1]) +
-                                   (pcl_voxel_1_pnts[pcl_v1_i + 2] - pcl_voxel_2_pnts[pcl_v2_i + 2]) *
-                                       (pcl_voxel_1_pnts[pcl_v1_i + 2] - pcl_voxel_2_pnts[pcl_v2_i + 2]));
+            const float dist = (pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) *
+                                   (pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) +
+                               (pcl_voxel_1_pnts[pcl_v1_i + 1] - pcl_voxel_2_pnts[pcl_v2_i + 1]) *
+                                   (pcl_voxel_1_pnts[pcl_v1_i + 1] - pcl_voxel_2_pnts[pcl_v2_i + 1]) +
+                               (pcl_voxel_1_pnts[pcl_v1_i + 2] - pcl_voxel_2_pnts[pcl_v2_i + 2]) *
+                                   (pcl_voxel_1_pnts[pcl_v1_i + 2] - pcl_voxel_2_pnts[pcl_v2_i + 2]);
 
-            if (dist < PCL_VOXEL_RADIUS) {
+            if (dist < PCL_VOXEL_RADIUS * PCL_VOXEL_RADIUS) {
                 sum += 1;
+                break;
             }
         }
     }
@@ -132,7 +145,10 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
     intersect_shuffle<<<num_blocks, max_threads_per_block>>>(pcl_voxel_1->points, pcl_voxel_2->points,
                                                              pcl_voxel_1->num_points, pcl_voxel_2->num_points, bool_sum,
                                                              bool_sum_size);
-    cudaDeviceSynchronize();
+
+    checkCudaErr(cudaPeekAtLastError());
+
+    checkCudaErr(cudaDeviceSynchronize());
 
     bool res = false;
 

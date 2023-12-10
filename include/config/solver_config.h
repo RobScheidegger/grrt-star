@@ -21,6 +21,7 @@ namespace grrt {
         std::vector<SolverProblem> problems;
 
         RobotFactory::SharedPtr robotFactory;
+        size_t timeoutSeconds = 10;
         bool useMPI = false;
         int mpiSize = 0;
         int mpiRank = 0;

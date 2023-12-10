@@ -24,33 +24,12 @@ namespace grrt {
             Point start_point = start_state->position;
             Point end_point = end_state->position;
 
-            // printf("start_point: (%f, %f, %f)\n", start_point.x, start_point.y, start_point.z);
-            // printf("end_point: (%f, %f, %f)\n", end_point.x, end_point.y, end_point.z);
-
             float sweep_length = start_point.distance(end_point);
+            int expected_num_iters = int((sweep_length + VOXEL_SWEEP_ERROR) / VOXEL_SWEEP_STEP_SIZE) + 1;
 
-            // We can't use a Point* here, instead a float* wehre each point is represented as three consecutive floats in the points array.
-            // printf("divisions: %d\n", int(sweep_length / VOXEL_SWEEP_STEP_SIZE));
-            // the +1 is beccause a voxel is also generated at swept_distance = 0
-
-            // int exptected_num_iters = (sweep_length != 0) ? int(sweep_length / VOXEL_SWEEP_STEP_SIZE) : 1;
-            int exptected_num_iters = int((sweep_length + VOXEL_SWEEP_ERROR) / VOXEL_SWEEP_STEP_SIZE) + 1;
-            // 0, 5, 10, 15
-            // 15 / 5 == 3
-
-            printf("expected_num_iters: %f\n", sweep_length);
-            printf("expected_num_iters: %f\n", VOXEL_SWEEP_STEP_SIZE);
-            printf("expected_num_iters: %d\n", exptected_num_iters);
-
-            // if (std::fmod(sweep_length, VOXEL_SWEEP_STEP_SIZE) == 0) {
-            //     exptected_num_iters += 1;
-            // }
-
-            int cloud_point_size = VOXEL_POINTS_SAMPLING_SIZE * exptected_num_iters * 3;
+            int cloud_point_size = VOXEL_POINTS_SAMPLING_SIZE * expected_num_iters * 3;
 
             PointCloudVoxelGPU::SharedPtr cloud = std::make_shared<PointCloudVoxelGPU>(cloud_point_size);
-
-            // int cloud_point_size = 0;
 
             cloud->start_point = start_point;
             cloud->end_point = end_point;
@@ -61,7 +40,6 @@ namespace grrt {
             int thing = 0;
             for (float swept_distance = 0; swept_distance <= sweep_length + VOXEL_SWEEP_ERROR;
                  swept_distance += VOXEL_SWEEP_STEP_SIZE) {
-                // printf("swept_distance: %f\n", swept_distance);
                 float a = swept_distance;
                 float b = sweep_length - swept_distance;
 
@@ -85,12 +63,9 @@ namespace grrt {
                 thing += 1;
             }
 
-            if (exptected_num_iters != thing) {
-                printf("mismatch!!! %d, %d\n", exptected_num_iters, thing);
+            if (expected_num_iters != thing) {
+                printf("mismatch!!! %d, %d\n", expected_num_iters, thing);
             }
-
-            // printf("thing: %d\n", thing);
-            // printf("cloud_point_size: %d\n", cloud_point_size);
 
             dart->voxel = cloud;
 

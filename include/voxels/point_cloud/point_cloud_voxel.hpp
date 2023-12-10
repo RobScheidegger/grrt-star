@@ -47,8 +47,6 @@ namespace grrt {
             PointCloudVoxel::SharedPtr pcl_voxel_1 = std::dynamic_pointer_cast<PointCloudVoxel>(voxel_1);
             PointCloudVoxel::SharedPtr pcl_voxel_2 = std::dynamic_pointer_cast<PointCloudVoxel>(voxel_2);
 
-            volatile bool foundIntersection = false;
-
             for (const Point& point_1 : pcl_voxel_1->m_points) {
                 for (const Point& point_2 : pcl_voxel_2->m_points) {
                     float dist = point_1.distance_squared(point_2);
