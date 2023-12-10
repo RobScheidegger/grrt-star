@@ -1,0 +1,1 @@
+git diff $(git hash-object -t tree /dev/null) --stat  -- :include :^include/pkgs :src :tests
