@@ -32,7 +32,7 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
 
 // each thread works on 3 floats from pcl_voxel_1 and 3 floats from pcl_voxel_2
 __global__ void intersect_shuffle(float* pcl_voxel_1_pnts, float* pcl_voxel_2_pnts, int pcl_voxel_1_count,
-                                  int pcl_voxel_2_count, int* bool_sum, int bool_sum_size) {
+                                  int pcl_voxel_2_count, int* bool_sum) {
 
     const int warp_id = threadIdx.x / THREADS_PER_WARP;
     const int lane_id = threadIdx.x % THREADS_PER_WARP;
@@ -51,7 +51,7 @@ __global__ void intersect_shuffle(float* pcl_voxel_1_pnts, float* pcl_voxel_2_pn
     for (int pcl_v1_i = pcl_v1_start_i; pcl_v1_i < pcl_v1_start_i + NUM_PCV1_POINTS_PER_THREAD * FLOATS_PER_POINT;
          pcl_v1_i += 3) {
 
-        if (sum)
+        if (sum || *bool_sum)
             break;
 
         if (pcl_v1_i >= pcl_voxel_1_count) {
@@ -61,7 +61,7 @@ __global__ void intersect_shuffle(float* pcl_voxel_1_pnts, float* pcl_voxel_2_pn
         for (int pcl_v2_i = pcl_v2_start_i; pcl_v2_i < pcl_v2_start_i + NUM_PCV2_POINTS_PER_THREAD * FLOATS_PER_POINT;
              pcl_v2_i += 3) {
 
-            if (pcl_v2_i >= pcl_voxel_2_count) {
+            if (pcl_v2_i >= pcl_voxel_2_count || *bool_sum) {
                 break;
             }
             const float dist = (pcl_voxel_1_pnts[pcl_v1_i] - pcl_voxel_2_pnts[pcl_v2_i]) *
@@ -78,18 +78,8 @@ __global__ void intersect_shuffle(float* pcl_voxel_1_pnts, float* pcl_voxel_2_pn
         }
     }
 
-    __syncthreads();
-
-    for (int offset = WARP_SIZE / 2; offset > 0; offset >>= 1)
-        sum += __shfl_down_sync(0xffffff, sum, offset);
-
-    if (lane_id == 0) {
-        int bool_i = blockIdx.x * WARPS_PER_BLOCK + warp_id;
-
-        if (bool_i >= bool_sum_size) {
-            printf("invalid acccess int bool_sum_size\n");
-        }
-        bool_sum[bool_i] += sum;
+    if(sum && !*bool_sum){
+        *bool_sum = 1;
     }
 }
 
@@ -142,22 +132,14 @@ bool PointCloudVoxelGPUManager::intersect(const Voxel::SharedPtr& voxel_1, const
     dim3 num_blocks(num_blocks_pcv1, num_blocks_pcv2, 1);
 
     dim3 max_threads_per_block(MAX_THREADS_PER_BLOCK, 1, 1);
-    intersect_shuffle<<<num_blocks, max_threads_per_block>>>(pcl_voxel_1->points, pcl_voxel_2->points,
-                                                             pcl_voxel_1->num_points, pcl_voxel_2->num_points, bool_sum,
-                                                             bool_sum_size);
+    intersect_shuffle<<<num_blocks, max_threads_per_block, 0, m_stream>>>(pcl_voxel_1->points, pcl_voxel_2->points,
+                                                             pcl_voxel_1->num_points, pcl_voxel_2->num_points, bool_sum);
 
     checkCudaErr(cudaPeekAtLastError());
 
-    checkCudaErr(cudaDeviceSynchronize());
+    checkCudaErr(cudaStreamSynchronize(m_stream));
 
-    bool res = false;
-
-    for (int i = 0; i < bool_sum_size; i++) {
-        if (bool_sum[i] > 0) {
-            res = true;
-            break;
-        }
-    }
+    bool res = !!bool_sum[0];
 
     return res;
 }
@@ -167,6 +149,8 @@ PointCloudVoxelGPUManager::PointCloudVoxelGPUManager() {
     if (err != cudaSuccess) {
         printf("Failed to allocate memory for bool_sum: %s", cudaGetErrorString(err));
     }
+
+    cudaStreamCreate(&m_stream);    
 }
 
 PointCloudVoxelGPUManager::~PointCloudVoxelGPUManager() {

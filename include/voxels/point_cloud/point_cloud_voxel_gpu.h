@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda.h>
+#include <cuda_runtime.h>
 #include <vector>
 
 #include "point.h"
@@ -44,6 +45,8 @@ namespace grrt {
         bool intersect(const Voxel::SharedPtr& voxel_1, const Voxel::SharedPtr& voxel_2) override;
 
         int* bool_sum = nullptr;
+
+        cudaStream_t m_stream;
 
         PointCloudVoxelGPUManager();
 
