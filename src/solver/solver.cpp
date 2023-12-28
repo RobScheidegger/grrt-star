@@ -131,7 +131,7 @@ SolverSolutions Solver::solve() {
         }).detach();
 
         auto start = std::chrono::high_resolution_clock::now();
-        auto result = solveProblem(problem, cancellationToken);
+        auto result = solveProblem(problem, this->m_cancelled);
         auto end = std::chrono::high_resolution_clock::now();
         auto solve_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 

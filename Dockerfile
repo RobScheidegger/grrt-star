@@ -38,7 +38,7 @@ ENV NVIDIA_REQUIRE_CUDA "cuda>=8.0"
 RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
 RUN dpkg -i cuda-keyring_1.1-1_all.deb
 RUN apt update
-RUN apt install cuda-toolkit -y
+RUN apt install cuda-toolkit-12-2 -y
 
 # RVIZ2 Forwarding
 ENV NVIDIA_VISIBLE_DEVICES \
